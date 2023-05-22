@@ -1,0 +1,8 @@
+{
+  "name": "diplom",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react",
+  "id": "0bea1103"
+}
