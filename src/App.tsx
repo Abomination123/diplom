@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Redirect, Route } from 'react-router-dom';
 import {
@@ -38,21 +37,28 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 
-import { auth, getAuth, db, doc, getDoc, onAuthStateChanged } from './firebase/config';
+import {
+  auth,
+  getAuth,
+  db,
+  doc,
+  getDoc,
+  onAuthStateChanged,
+} from './firebase/config';
 import { getCoworkingId } from './firebase/functions';
 import { DocumentData } from 'firebase/firestore';
 import { User } from './types';
 
 setupIonicReact({
   rippleEffect: false,
-  scrollAssist: false
+  scrollAssist: false,
 });
 
 // register Swiper custom elements
 register();
 
 const App: React.FC = () => {
-  // const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<DocumentData | undefined | null>(null);
 
   useEffect(() => {
@@ -69,12 +75,12 @@ const App: React.FC = () => {
         // })
         // .catch((error) => {
         // alert(error);
-        // setLoading(false);
+        setLoading(false);
         // });
       } else {
         console.error('No currentUser');
         // history.push('/login');
-        // setLoading(false);
+        setLoading(false);
       }
     });
 
@@ -82,17 +88,20 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, [auth]);
 
-  // if (loading) {
-  //   return (
-  //     <div>Loading...</div> // replace this with your loading component
-  //   );
-  // }
+  if (loading) {
+    return (
+      <IonPage>Loading...</IonPage> // replace this with your loading component
+    );
+  }
 
   return (
     <IonApp>
       <IonReactRouter>
         <IonSplitPane contentId='main'>
-          <Menu disabled={!(user && !user.admin)} email={user ? user.email : ''} />
+          <Menu
+            disabled={!(user && !user.admin)}
+            email={user ? user.email : ''}
+          />
           <IonRouterOutlet id='main'>
             <Route
               path='/'
@@ -135,17 +144,67 @@ const App: React.FC = () => {
             {/* {user && ( */}
             {/* <IonSplitPane contentId='main'>
             <Menu /> */}
-            <Route path='/Bookings' exact render={(props) => (user && !user.admin) ? <Bookings user={user} {...props} /> : <Redirect to='/login' />} />
+            <Route
+              path='/Bookings'
+              exact
+              render={(props) =>
+                user && !user.admin ? (
+                  <Bookings user={user} {...props} />
+                ) : (
+                  <Redirect to='/login' />
+                )
+              }
+            />
 
             {/* </Route> */}
-            <Route path='/Coworkings' exact render={(props) => user ? <Coworkings user={user} {...props} /> : <Redirect to='/login' />} />
+            <Route
+              path='/Coworkings'
+              exact
+              render={(props) =>
+                user ? (
+                  <Coworkings user={user} {...props} />
+                ) : (
+                  <Redirect to='/login' />
+                )
+              }
+            />
 
             {/* </Route> */}
-            <Route path='/Coworkings/:id' exact render={(props) => user ? <CoworkingPage user={user} {...props} /> : <Redirect to='/login' />} />
+            <Route
+              path='/Coworkings/:id'
+              exact
+              render={(props) =>
+                user ? (
+                  <CoworkingPage user={user} {...props} />
+                ) : (
+                  <Redirect to='/login' />
+                )
+              }
+            />
 
-            <Route path='/addCoworking' exact render={(props) => (user && user.admin) ? <AddCoworking user={user} {...props} /> : <Redirect to='/login' />} />
+            <Route
+              path='/addCoworking'
+              exact
+              render={(props) =>
+                user && user.admin ? (
+                  <AddCoworking user={user} {...props} />
+                ) : (
+                  <Redirect to='/login' />
+                )
+              }
+            />
 
-            <Route path='/WorkingPlaces' exact render={(props) => (user && user.admin) ? <WorkingPlaces user={user} {...props} /> : <Redirect to='/login' />} />
+            <Route
+              path='/WorkingPlaces'
+              exact
+              render={(props) =>
+                user && user.admin ? (
+                  <WorkingPlaces user={user} {...props} />
+                ) : (
+                  <Redirect to='/login' />
+                )
+              }
+            />
 
             {/* <Route render={() => <Redirect to='/login' />} /> */}
 

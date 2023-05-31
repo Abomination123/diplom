@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DocumentData } from 'firebase/firestore';
 import {
@@ -26,7 +25,7 @@ import {
   IonCardSubtitle,
   IonCardHeader,
   IonAlert,
-  IonImg
+  IonImg,
 } from '@ionic/react';
 import { RouteComponentProps } from 'react-router';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -36,15 +35,38 @@ import 'swiper/css/pagination';
 
 import { WorkingPlace, CoworkingItemType, TimeSlot } from '../types';
 import { mockWorkingPlaces } from './WorkingPlaces';
-import { getCoworkingInfoById, getWorkingPlaces, createBooking } from '../firebase/functions';
+import {
+  getCoworkingInfoById,
+  getWorkingPlaces,
+  createBooking,
+} from '../firebase/functions';
 
-export const mockedAvailableDatesAndTimeSlots = [{ date: '2023-06-01', timeSlots: [{ startTime: { hour: '15', minute: '00' }, endTime: { hour: '17', minute: '15' } }, { startTime: { hour: '17', minute: '30' }, endTime: { hour: '18', minute: '45' } }] }];
+export const mockedAvailableDatesAndTimeSlots = [
+  {
+    date: '2023-06-01',
+    timeSlots: [
+      {
+        startTime: { hour: '15', minute: '00' },
+        endTime: { hour: '17', minute: '15' },
+      },
+      {
+        startTime: { hour: '17', minute: '30' },
+        endTime: { hour: '18', minute: '45' },
+      },
+    ],
+  },
+];
 
-interface CoworkingPageProps extends RouteComponentProps<{ id: string; }> {
+interface CoworkingPageProps extends RouteComponentProps<{ id: string }> {
   user: DocumentData;
 }
 
-const CoworkingPage: React.FC<CoworkingPageProps> = ({ user, match, location, history }) => {
+const CoworkingPage: React.FC<CoworkingPageProps> = ({
+  user,
+  match,
+  location,
+  history,
+}) => {
   // const { name, location: coworkingLocation, description, imageUrls, networking } = location.state as CoworkingItemType;
   // console.log({ name, location: coworkingLocation, description, imageUrls, networking });
 
@@ -52,29 +74,46 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({ user, match, location, hi
   const [workingPlaces, setWorkingPlaces] = useState<WorkingPlace[] | []>([]);
   const [bookingPlaceId, setBookingPlaceId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>();
+  const [availableDayss, setAvailableDayss] = useState<undefined | number[]>(
+    undefined
+  );
 
   console.log(selectedTimeSlot);
   console.log(match.params.id);
 
   useEffect(() => {
+    setTimeout(() => {
+      setAvailableDayss(availableDays);
+    }, 2000);
+  }, []);
+
+  useEffect(() => {
     const fetchCoworkingInfo = async () => {
       const coworkingData = await getCoworkingInfoById(match.params.id);
       setCoworking(coworkingData);
-    }
+    };
 
     fetchCoworkingInfo();
 
     const fetchWorkingPlaces = async () => {
       const workingPlacesData = await getWorkingPlaces(match.params.id);
       if (workingPlacesData.length) {
-        const filteredWPAvailableDates = workingPlacesData.filter((workingPlace) => Boolean(Object.keys(workingPlace.availableDates || {}).length));
+        const filteredWPAvailableDates = workingPlacesData.filter(
+          (workingPlace) =>
+            Boolean(Object.keys(workingPlace.availableDates || {}).length)
+        );
         setWorkingPlaces(filteredWPAvailableDates);
-        setSelectedDate(Object.keys(filteredWPAvailableDates[0].availableDates)[0])
+        setSelectedDate(
+          Object.keys(filteredWPAvailableDates[0].availableDates)[0]
+        );
+        console.log(Object.keys(filteredWPAvailableDates[0].availableDates)[0]);
       } else {
         setWorkingPlaces(mockWorkingPlaces);
-        setSelectedDate(Object.keys(mockWorkingPlaces[0].availableDates)[0])
+        setSelectedDate(Object.keys(mockWorkingPlaces[0].availableDates)[0]);
       }
     };
 
@@ -88,50 +127,71 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({ user, match, location, hi
 
   const handleConfirm = () => {
     setShowConfirm(false);
-    console.log(user.id, bookingPlaceId, coworking!.id, selectedDate, selectedTimeSlot);
+    console.log(
+      user.id,
+      bookingPlaceId,
+      coworking!.id,
+      selectedDate,
+      selectedTimeSlot
+    );
     if (!bookingPlaceId!.startsWith('wp')) {
-      createBooking({ userId: user.id, workingPlaceId: bookingPlaceId!, coworkingId: coworking!.id, timeSlot: selectedTimeSlot! }, [selectedDate])
+      createBooking(
+        {
+          userId: user.id,
+          workingPlaceId: bookingPlaceId!,
+          coworkingId: coworking!.id,
+          timeSlot: selectedTimeSlot!,
+        },
+        [selectedDate]
+      );
     }
-    setWorkingPlaces(prevWPs => prevWPs.map(wp => {
-      if (wp.id !== bookingPlaceId) {
-        return wp;
-      } else {
-        return {
-          ...wp,
-          availableDates: {
-            ...wp.availableDates,
-            [selectedDate]: wp.availableDates[selectedDate].filter(({ startTime, endTime }) => startTime.hour !== selectedTimeSlot!.startTime.hour && endTime.hour !== selectedTimeSlot!.endTime.hour)
-          }
+    setWorkingPlaces((prevWPs) =>
+      prevWPs.map((wp) => {
+        if (wp.id !== bookingPlaceId) {
+          return wp;
+        } else {
+          return {
+            ...wp,
+            availableDates: {
+              ...wp.availableDates,
+              [selectedDate]: wp.availableDates[selectedDate].filter(
+                ({ startTime, endTime }) =>
+                  startTime.hour !== selectedTimeSlot!.startTime.hour &&
+                  endTime.hour !== selectedTimeSlot!.endTime.hour
+              ),
+            },
+          };
         }
-      }
-    }))
+      })
+    );
     setSelectedTimeSlot(null);
   };
 
-
   const handleDateChange = (e: any) => {
-    e.preventDefault()
+    e.preventDefault();
     setSelectedDate(e.detail.value);
     console.log(e.detail.value);
     e.detail.value !== selectedDate && setSelectedTimeSlot(null);
   };
 
   const handleTimeSlotChange = (e: any) => {
-    console.log(e.detail.value)
+    console.log(e.detail.value);
     setSelectedTimeSlot(e.detail.value);
   };
 
   const availableDatesAndTimeSlots = workingPlaces.length
     ? (workingPlaces as WorkingPlace[]).reduce((acc, place) => {
-      if (place.availableDates) {
-        const datesAndTimeSlots = Object.entries(place.availableDates).map(([date, timeSlots]) => ({
-          date,
-          timeSlots,
-        }));
-        return [...acc, ...datesAndTimeSlots];
-      }
-      return acc;
-    }, [] as { date: string; timeSlots: TimeSlot[] }[])
+        if (place.availableDates) {
+          const datesAndTimeSlots = Object.entries(place.availableDates).map(
+            ([date, timeSlots]) => ({
+              date,
+              timeSlots,
+            })
+          );
+          return [...acc, ...datesAndTimeSlots];
+        }
+        return acc;
+      }, [] as { date: string; timeSlots: TimeSlot[] }[])
     : mockedAvailableDatesAndTimeSlots;
   console.log(availableDatesAndTimeSlots);
   // const availableDatesAndTimeSlots = workingPlaces.length ? workingPlaces.reduce((acc, place) => {
@@ -142,47 +202,67 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({ user, match, location, hi
   // }, []) : [{ date: '2023-06-01', timeSlots: [{ startTime: { hour: '15', minutes: '00' }, endTime: { hour: '17', minutes: '15' } }, { startTime: { hour: '17', minutes: '30' }, endTime: { hour: '18', minutes: '45' } }] }];
 
   const availableYears = Array.from(
-    new Set(availableDatesAndTimeSlots.map(item => new Date(item.date).getFullYear()))
+    new Set(
+      availableDatesAndTimeSlots.map((item) =>
+        new Date(item.date).getFullYear()
+      )
+    )
   );
   console.log(availableYears);
 
-
   const availableMonths = Array.from(
-    new Set(availableDatesAndTimeSlots
-      .filter(item => new Date(item.date).getFullYear() === new Date(selectedDate).getFullYear())
-      .map(item => new Date(item.date).getMonth() + 1))
+    new Set(
+      availableDatesAndTimeSlots
+        .filter(
+          (item) =>
+            new Date(item.date).getFullYear() ===
+            new Date(selectedDate).getFullYear()
+        )
+        .map((item) => new Date(item.date).getMonth() + 1)
+    )
   );
-  console.log(availableMonths)
+  console.log(availableMonths);
 
   const availableDays = Array.from(
-    new Set(availableDatesAndTimeSlots
-      .filter(item => new Date(item.date).getFullYear() === new Date(selectedDate).getFullYear() &&
-        new Date(item.date).getMonth() === new Date(selectedDate).getMonth())
-      .map(item => new Date(item.date).getDate()))
+    new Set(
+      availableDatesAndTimeSlots
+        .filter(
+          (item) =>
+            new Date(item.date).getFullYear() ===
+              new Date(selectedDate).getFullYear() &&
+            new Date(item.date).getMonth() === new Date(selectedDate).getMonth()
+        )
+        .map((item) => new Date(item.date).getDate())
+    )
   );
-  console.log(availableDays)
+  // .sort()
+  // .join(',');
+  console.log(availableDays);
 
   const availableTimeSlots = selectedDate
-    ? availableDatesAndTimeSlots
-      .find(slot => slot.date === selectedDate)?.timeSlots || []
+    ? availableDatesAndTimeSlots.find((slot) => slot.date === selectedDate)
+        ?.timeSlots || []
     : [];
-  console.log(availableTimeSlots)
+  console.log(availableTimeSlots);
 
   const availablePlaces = selectedTimeSlot
-    ? workingPlaces.length ?
-      workingPlaces.filter(
-        place => Object.keys(place.availableDates).includes(selectedDate)
-          && place.availableDates[selectedDate].some(
-            ({ startTime, endTime }) => startTime.hour === selectedTimeSlot.startTime.hour
-              && endTime.hour === selectedTimeSlot.endTime.hour
-          )
-      )
+    ? workingPlaces.length
+      ? workingPlaces.filter(
+          (place) =>
+            Object.keys(place.availableDates).includes(selectedDate) &&
+            place.availableDates[selectedDate].some(
+              ({ startTime, endTime }) =>
+                startTime.hour === selectedTimeSlot.startTime.hour &&
+                endTime.hour === selectedTimeSlot.endTime.hour
+            )
+        )
       : mockWorkingPlaces
     : [];
 
   const compareWith = (o1: TimeSlot, o2: TimeSlot) => {
     return o1 && o2
-      ? o1.startTime.hour === o2.startTime.hour && o1.endTime.hour === o2.endTime.hour
+      ? o1.startTime.hour === o2.startTime.hour &&
+          o1.endTime.hour === o2.endTime.hour
       : o1 === o2;
   };
 
@@ -241,10 +321,7 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({ user, match, location, hi
                   margin: 'auto',
                 }}
               >
-                <Swiper
-                  modules={[Pagination]}
-                  pagination={true}
-                >
+                <Swiper modules={[Pagination]} pagination={true}>
                   {coworking.imageUrls
                     .filter((url) => url)
                     .map((url, index) => (
@@ -283,11 +360,18 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({ user, match, location, hi
                 compareWith={compareWith}
                 onIonChange={handleTimeSlotChange}
                 value={selectedTimeSlot}
-                style={{ margin: 'auto', border: '1px solid #000', borderRadius: '5px', padding: '10px', width: 'fit-content' }}
+                style={{
+                  margin: 'auto',
+                  border: '1px solid #000',
+                  borderRadius: '5px',
+                  padding: '10px',
+                  width: 'fit-content',
+                }}
               >
                 {availableTimeSlots.map(({ startTime, endTime }, index) => (
                   <IonSelectOption key={index} value={{ startTime, endTime }}>
-                    {startTime.hour}:{startTime.minute} - {endTime.hour}:{endTime.minute}
+                    {startTime.hour}:{startTime.minute} - {endTime.hour}:
+                    {endTime.minute}
                   </IonSelectOption>
                 ))}
               </IonSelect>
@@ -306,7 +390,9 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({ user, match, location, hi
 
                       <IonCardContent>
                         Seats: {place.seats} <br />
-                        <small style={{ fontSize: '1.2' }}>Price per hour: {place.pricePerHour}</small>
+                        <small style={{ fontSize: '1.2' }}>
+                          Price per hour: {place.pricePerHour}
+                        </small>
                         <IonButton
                           size='small'
                           expand='full'
@@ -335,16 +421,15 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({ user, match, location, hi
                 cssClass: 'secondary',
                 handler: () => {
                   setShowConfirm(false);
-                }
+                },
               },
               {
                 text: 'Confirm',
                 role: 'confirm',
-                handler: handleConfirm
-              }
+                handler: handleConfirm,
+              },
             ]}
           />
-
         </IonGrid>
       </IonContent>
     </IonPage>
