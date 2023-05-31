@@ -17,8 +17,11 @@ import {
 } from '@ionic/react';
 import React, { useState } from 'react';
 import { businessOutline } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { RouteComponentProps } from 'react-router';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 import {
   addDoc,
   collection,
@@ -27,15 +30,23 @@ import {
   serverTimestamp,
   setDoc,
 } from '../firebase/config';
+import { CustomizedState } from '../types';
+import { DocumentData } from 'firebase/firestore';
 
-const AddCoworking: React.FC = () => {
-  const history = useHistory();
+interface BookingsPageProps extends RouteComponentProps {
+  user: DocumentData;
+}
+const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
   const [name, setName] = useState<string>('');
   const [location, setLocation] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [imageUrls, setImageUrls] = useState<string[]>(['', '', '']);
   const [iserror, setIserror] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
+
+  // const loca = useLocation();
+  // const state = loca.state as CustomizedState;
+  // console.log(loca);
 
   const handleImageUrl = (url: string, index: number) => {
     setImageUrls((prevUrls) => {
@@ -200,7 +211,7 @@ const AddCoworking: React.FC = () => {
         location,
         description,
         imageUrls,
-        authorID: (history as any).state.state.user.id,
+        authorID: user.id,
         createdAt: timestamp,
       };
       // if (!id) {
@@ -208,12 +219,11 @@ const AddCoworking: React.FC = () => {
       // } else {
       // await setDoc(doc(coworkingRef, id), data);
       // }
+      history.push('/WorkingPlaces', { coworkingId: coworkingRef.id });
     } catch (error) {
       console.log(error);
     }
 
-    // Redirect to WorkingPlaces page after successful submission
-    history.push('/WorkingPlaces');
   };
 
   return (
@@ -221,11 +231,6 @@ const AddCoworking: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Add Coworking</IonTitle>
-          {/* {
-            (JSON.stringify((window.history as any).state.state.user.id),
-            null,
-            2)
-          } */}
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className='ion-padding ion-text-center'>
@@ -324,7 +329,12 @@ const AddCoworking: React.FC = () => {
                   margin: 'auto',
                 }}
               >
-                <Swiper slidesPerView={1} spaceBetween={10}>
+                <Swiper
+                  modules={[Pagination]}
+                  pagination={{ clickable: true }}
+                  slidesPerView={1}
+                  spaceBetween={10}
+                >
                   {imageUrls
                     .filter((url) => url)
                     .map((url, index) => (

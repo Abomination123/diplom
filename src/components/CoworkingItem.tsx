@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   IonCard,
   IonCardHeader,
@@ -7,84 +7,73 @@ import {
   IonBadge,
   IonImg,
   IonLabel,
-  IonIcon,
-  IonItem,
   IonButton,
+  IonRow,
+  IonCol,
+  IonItem,
+  IonCardSubtitle,
+  IonIcon,
 } from '@ionic/react';
-// import { chevronForward, chevronBack } from 'ionicons/icons';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper';
+import { CoworkingItemType } from '../types'
 
 import 'swiper/css';
-import '@ionic/react/css/ionic-swiper.css';
 import 'swiper/css/pagination';
+import './CoworkingItem.css'; // добавлен файл со стилями
 
+import { arrowForwardCircleOutline } from 'ionicons/icons';
 interface CoworkingItemProps {
-  id: string;
-  name: string;
-  location: string;
-  imageUrls: string[];
+  coworking: CoworkingItemType;
   networking: boolean;
-  handleClick: () => void;
+  // onButtonBookClick: (coworking: CoworkingItemType) => void;
 }
 
-export type CoworkingItemType = {
-  id: string;
-  name: string;
-  location: string;
-  imageUrls: string[];
-  description?: string;
-  networking?: boolean;
-};
-
 const CoworkingItem: React.FC<CoworkingItemProps> = ({
-  id,
-  name,
-  location,
-  imageUrls,
+  coworking: { id, name, location, description, imageUrls },
   networking,
-  handleClick,
+  // onButtonBookClick
 }) => {
-  // const [activeSlide, setActiveSlide] = useState(0);
-
-  // const handleNext = () => {
-  //   if (activeSlide < imageUrls.length - 1) {
-  //     setActiveSlide(activeSlide + 1);
-  //   }
-  // };
-
-  // const handlePrevious = () => {
-  //   if (activeSlide > 0) {
-  //     setActiveSlide(activeSlide - 1);
-  //   }
-  // };
-
   return (
-    <IonCard key={id} onClick={handleClick}>
+    <IonCard className="coworking-card">
       <IonCardHeader>
-        <IonCardTitle>{name}</IonCardTitle>
-        <IonLabel>{location}</IonLabel>
-        <IonButton routerLink={`Coworkings/${id}`} size='small'>
-          <IonLabel>Book</IonLabel>
-        </IonButton>
+        <IonRow>
+          <IonCol size="6">
+            <Swiper modules={[Pagination]} pagination={true} className="image-swiper">
+              {imageUrls.map((imageUrl, index) => (
+                <SwiperSlide key={index}>
+                  <IonImg className="coworking-image" src={imageUrl} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </IonCol>
+          <IonCol size="6" className="coworking-info">
+            <IonCardTitle className='coworking-title'>{name}</IonCardTitle>
+            <IonCardSubtitle>{location}</IonCardSubtitle>
+            {networking && (
+              <IonBadge className='badge-networking' color='primary'>
+                <small>Networking potential</small>
+              </IonBadge>
+            )}
+            <IonButton
+              // onClick={e => onButtonBookClick(
+              //   {
+              //     id,
+              //     name,
+              //     location,
+              //     imageUrls,
+              //     description,
+              //     networking
+              //   })}
+              routerLink={`/Coworkings/${id}`}
+              className='book-button'
+              size='small'
+            >
+              <IonLabel>Book</IonLabel> &nbsp;<IonIcon icon={arrowForwardCircleOutline} size='small' />
+            </IonButton>
+          </IonCol>
+        </IonRow>
       </IonCardHeader>
-      <IonCardContent>
-        <Swiper modules={[Pagination]} pagination={true}>
-          {imageUrls.map((imageUrl, index) => (
-            <SwiperSlide key={index}>
-              <IonImg src={imageUrl} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        <IonItem slot='end'>
-          {networking && (
-            <IonBadge slot='end' color='primary'>
-              Networking potential
-            </IonBadge>
-          )}
-        </IonItem>
-      </IonCardContent>
     </IonCard>
   );
 };

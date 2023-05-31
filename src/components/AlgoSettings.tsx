@@ -17,17 +17,9 @@ import {
   IonCardHeader,
 } from '@ionic/react';
 import { addCircleOutline, removeCircleOutline } from 'ionicons/icons';
+import { RangeValue, newSettings } from '../types';
+import './AlgoSettings.css';
 
-export type RangeValue = {
-  lower: number;
-  upper: number;
-};
-
-export type newSettings = {
-  location: string;
-  skills: string[];
-  priceRange: RangeValue;
-};
 
 interface AlgoSettingsProps {
   location: string;
@@ -57,13 +49,14 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
   useEffect(() => {
     setUserLocation(location);
     setUserSkills(skills);
-  }, [location, skills]);
+    setUserPriceRange(priceRange);
+  }, [location, skills, priceRange]);
 
-  useEffect(() => {
-    setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
-    }, 300);
-  }, []);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     window.dispatchEvent(new Event('resize'));
+  //   }, 300);
+  // }, []);
 
   const addSkill = () => {
     setUserSkills([...userSkills, '']);
@@ -80,16 +73,6 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
     newSkills[index] = value;
     setUserSkills(newSkills);
   };
-
-  // scdjcjac
-  // const handleConfirm = () => {
-  //   onAlgorithmRestart({
-  //     location: userLocation,
-  //     skills: userSkills,
-  //     priceRange,
-  //   });
-  //   setShowModal(false);
-  // };
 
   return (
     <IonPage>
@@ -125,29 +108,33 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
           <IonCardHeader>
             <IonLabel>Location</IonLabel>
           </IonCardHeader>
-          <IonInput
-            value={userLocation}
-            placeholder='Enter your location'
-            style={{ paddingLeft: '10px', color: 'black' }}
-            onIonChange={(e) => setUserLocation(e.detail.value || '')}
-          />
+          <IonItem lines='none'>
+            <IonInput
+              value={userLocation}
+              placeholder='Enter your location'
+              // className='input-location'
+              onIonChange={(e) => setUserLocation(e.detail.value || '')}
+            />
+          </IonItem>
         </IonCard>
         <IonCard>
           <IonCardHeader>
             <IonLabel>Price Range</IonLabel>
           </IonCardHeader>
-          <IonRange
-            aria-label='Dual Knobs Range'
-            dualKnobs={true}
-            value={{
-              lower: userPriceRange?.lower ?? 20,
-              upper: userPriceRange?.upper ?? 80,
-            }}
-            onIonChange={(e) => setUserPriceRange(e.detail.value as RangeValue)}
-          >
-            <IonLabel slot='start'>{userPriceRange?.lower ?? 0}</IonLabel>
-            <IonLabel slot='end'>{userPriceRange?.upper ?? 100}</IonLabel>
-          </IonRange>
+          <IonItem lines='none'>
+            <IonRange
+              aria-label='Dual Knobs Range'
+              dualKnobs={true}
+              value={{
+                lower: userPriceRange?.lower ?? 20,
+                upper: userPriceRange?.upper ?? 80,
+              }}
+              onIonInput={(e) => setUserPriceRange(e.detail.value as RangeValue)}
+            >
+              <IonLabel slot='start'>{userPriceRange?.lower ?? 0}</IonLabel>
+              <IonLabel slot='end'>{userPriceRange?.upper ?? 100}</IonLabel>
+            </IonRange>
+          </IonItem>
         </IonCard>
         {userSkills &&
           userSkills.map((skill, index) => (
@@ -159,26 +146,20 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
                 <IonInput
                   value={skill}
                   placeholder='Enter a skill'
-                  onIonChange={(e) =>
+                  onIonInput={(e) =>
                     handleSkillChange(e.detail.value || '', index)
                   }
                 />
                 <IonIcon
                   slot='end'
+                  // className='icon-end'
                   icon={removeCircleOutline}
                   onClick={() => removeSkill(index)}
                 />
               </IonItem>
             </IonCard>
           ))}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingTop: '50px',
-          }}
-        >
+        <div className='add-skill'>
           <IonLabel>Add another skill</IonLabel>
           <IonIcon
             icon={addCircleOutline}

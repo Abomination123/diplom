@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Virtuoso } from 'react-virtuoso';
-import { useParams } from 'react-router';
+import { RouteComponentProps, useParams } from 'react-router';
 import {
   IonButtons,
   IonContent,
@@ -12,42 +12,34 @@ import {
   IonLoading,
   useIonModal,
   IonIcon,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  InfiniteScrollCustomEvent,
+  IonList,
 } from '@ionic/react';
 import { OverlayEventDetail } from '@ionic/core/components';
 import { optionsOutline, analyticsOutline } from 'ionicons/icons';
 import CoworkingItem from '../components/CoworkingItem';
 import AlgoSettings from '../components/AlgoSettings';
-import { newSettings, RangeValue } from '../components/AlgoSettings';
-import './Coworkings.css';
-import {
-  collection,
-  db,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-} from '../firebase/config';
 
-import { CoworkingItemType } from '../components/CoworkingItem';
+import { CoworkingItemType, DocumentDataInterface, newSettings, RangeValue } from '../types';
+import { fetchCoworkings, updateUserSkills } from '../firebase/functions';
+import { DocumentData } from 'firebase/firestore';
 
-// interface CoworkingData {
-//   id: string;
-//   name: string;
-//   location: string;
-//   imageUrls: string[];
-//   networking: boolean;
-// }
-
-const Coworkings: React.FC = () => {
-  const { name } = useParams<{ name: string }>();
+interface CoworkingsPageProps extends RouteComponentProps {
+  user: DocumentData;
+}
+const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
   const [data, setData] = useState<CoworkingItemType[]>([]);
+  const [userSkills, setUserSkills] = useState<string[]>(user.userSkills);
   const [page, setPage] = useState(1);
   const [priceRange, setPriceRange] = useState({ lower: 20, upper: 80 });
   const [isLoading, setIsLoading] = useState(false);
+  const pageSize = 15;
 
   const [present, dismiss] = useIonModal(AlgoSettings, {
     location: 'Kyiv, Pechersk',
-    skills: ['Ionic', 'Firebase'],
+    skills: userSkills,
     priceRange: priceRange,
     onDismiss: (
       data:
@@ -58,76 +50,48 @@ const Coworkings: React.FC = () => {
     ) => dismiss(data, role),
   });
 
-  const coworkingsRef = collection(db, 'coworkings');
-  useEffect(() => {
-    // setIsLoading(true);
-    const q = query(
-      coworkingsRef,
-      // where('authorID', '==', userId),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const newCoworkings: any = [];
-        querySnapshot.forEach((doc) => {
-          const coworking = doc.data();
-          coworking.id = doc.id;
-          newCoworkings.push(coworking);
-        });
-        setData(newCoworkings);
+  const openModal = () => {
+    present({
+      onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
+        if (ev.detail.role === 'confirm') {
+          setUserSkills(ev.detail.data.skills);
+          updateUserSkills(user.id, ev.detail.data.skills);
+          if (!ev.detail.data) { fetchCoworkingsBatch(ev.detail.data); }
+        }
       },
-      (error) => {
-        console.log(error);
-      }
-    );
+    });
+  };
+
+
+  useEffect(() => {
+    const unsubscribe = fetchCoworkings(setData);
 
     return () => {
       unsubscribe();
     };
   }, []);
 
-  // useEffect(() => {
-  //   setIsLoading(true);
-  //   fetch(`https://your-api.com/coworkings?page=${page}&limit=20`)
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       setData((prevData) => [...prevData, ...data]);
-  //       setIsLoading(false);
-  //     })
-  //     .catch((error) => {
-  //       console.error('Ошибка:', error);
-  //       setIsLoading(false);
-  //     });
-  // }, [page]);
+  const fetchCoworkingsBatch = async (data: any) => {
+    setIsLoading(true);
 
-  const handleEndReached = () => {
-    setPage((prevPage) => prevPage + 1);
+    try {
+      const res = await fetch(`api/algo-restart/${location}/${userSkills[0]}/${priceRange.upper}/${page}`);
+      const { coworkings } = await res.json();
+      setData(prevData => [...prevData, ...coworkings]);
+      setPage(page + 1);
+    } catch (err) {
+      console.error(err);
+    }
+
+    setIsLoading(false);
   };
 
-  const handleItemClick = (id: string) => {
-    console.log(`Переход на страницу бронирования для коворкинга ${id}`);
-    // Здесь добавьте логику для перехода на страницу бронирования
-  };
+  const handleEnd = async (ev: InfiniteScrollCustomEvent) => {
+    if (data.length < 45) {
+      await fetchCoworkingsBatch(userSkills);
+    }
 
-  const openModal = () => {
-    present({
-      onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
-        if (ev.detail.role === 'confirm') {
-          onAlgorithmRestart(ev.detail.data);
-        }
-      },
-    });
-  };
-
-  const onAlgorithmRestart = ({
-    location,
-    skills,
-    priceRange,
-  }: newSettings) => {
-    console.log(`algo restart ${location} ${skills} ${priceRange.upper}`);
-    // algo restart
+    ev.target.complete();
   };
 
   return (
@@ -137,7 +101,7 @@ const Coworkings: React.FC = () => {
           <IonButtons slot='start'>
             <IonMenuButton />
           </IonButtons>
-          <IonTitle>{name}</IonTitle>
+          <IonTitle>{ }</IonTitle>
           <IonIcon
             slot='end'
             icon={analyticsOutline}
@@ -149,21 +113,23 @@ const Coworkings: React.FC = () => {
       </IonHeader>
 
       <IonContent fullscreen>
-        <Virtuoso
-          data={data}
-          itemContent={(index, item) => (
+        <IonList>
+          {data.map((coworking, index) => (
             <CoworkingItem
-              id={item.id}
-              name={item.name}
-              location={item.location}
-              imageUrls={item.imageUrls}
-              networking={index == 1}
-              handleClick={() => handleItemClick(item.id)}
+              key={coworking.id}
+              coworking={coworking}
+              networking={index === 1}
+            // onButtonBookClick={handleButtonBookClick}
             />
-          )}
-          endReached={handleEndReached}
-        />
-        <IonLoading isOpen={isLoading} message={'Loading...'} />
+          ))}
+        </IonList>
+        <IonInfiniteScroll threshold="5%" onIonInfinite={handleEnd}>
+          <IonInfiniteScrollContent
+            loadingSpinner="bubbles"
+            loadingText="Loading more data..."
+          >
+          </IonInfiniteScrollContent>
+        </IonInfiniteScroll>
       </IonContent>
     </IonPage>
   );

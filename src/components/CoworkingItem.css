@@ -1,0 +1,30 @@
+.coworking-title {
+  font-size: 1.2rem;
+}
+
+.coworking-card {
+  height: 150px;
+}
+
+.coworking-image {}
+
+.image-swiper {
+  width: 120px;
+  height: 120px;
+}
+
+.coworking-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.badge-networking {
+  background-color: limegreen;
+  width: 120px;
+  margin-top: 5px;
+}
+
+.book-button {
+  align-self: baseline;
+}

@@ -1,12 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
+import { Redirect, Route } from 'react-router-dom';
 import {
   IonApp,
+  IonPage,
   IonRouterOutlet,
   IonSplitPane,
   setupIonicReact,
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { Redirect, Route } from 'react-router-dom';
+import { register } from 'swiper/element/bundle';
 import Menu from './components/Menu';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -35,64 +38,171 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 
-setupIonicReact();
+import { auth, getAuth, db, doc, getDoc, onAuthStateChanged } from './firebase/config';
+import { getCoworkingId } from './firebase/functions';
+import { DocumentData } from 'firebase/firestore';
+import { User } from './types';
+
+setupIonicReact({
+  rippleEffect: false,
+  scrollAssist: false
+});
+
+// register Swiper custom elements
+register();
 
 const App: React.FC = () => {
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<DocumentData | undefined | null>(null);
+
   useEffect(() => {
-    // onAuthStateChanged(auth, (user) => {
-    //   if (user) {
-    //     const userRef = doc(db, 'users', user.uid);
-    //     getDoc(userRef)
-    //       .then((document) => {
-    //         const userData = document.data();
-    //         setLoading(false);
-    //         setUser(userData);
-    //       })
-    //       .catch((error) => {
-    //         alert(error);
-    //         setLoading(false);
-    //       });
-    //   } else {
-    //     setLoading(false);
-    //   }});
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userSnapshot = await getDoc(userRef);
+
+        // .then((document) => {
+        const userData = userSnapshot.data();
+        console.log(userData);
+        // setLoading(false);
+        setUser(userData);
+        // })
+        // .catch((error) => {
+        // alert(error);
+        // setLoading(false);
+        // });
+      } else {
+        console.error('No currentUser');
+        // history.push('/login');
+        // setLoading(false);
+      }
+    });
+
+    // Unsubscribe on cleanup
+    return () => unsubscribe();
+  }, [auth]);
+
+  // if (loading) {
+  //   return (
+  //     <div>Loading...</div> // replace this with your loading component
+  //   );
+  // }
+
   return (
     <IonApp>
       <IonReactRouter>
         <IonSplitPane contentId='main'>
-          <Menu />
+          <Menu disabled={!(user && !user.admin)} email={user ? user.email : ''} />
           <IonRouterOutlet id='main'>
-            <Route path='/' exact={true}>
-              <Redirect to='/login' />
-            </Route>
-            <Route path='/login' exact={true}>
-              <Login />
-            </Route>
-            <Route path='/register' exact={true}>
-              <Register />
-            </Route>
-            <Route path='/addCoworking' exact={true}>
-              <AddCoworking />
-            </Route>
-            <Route path='/WorkingPlaces' exact={true}>
-              <WorkingPlaces />
-            </Route>
-            <Route path='/Coworkings' exact={true}>
-              <Coworkings />
-            </Route>
             <Route
-              path='/Coworkings/:id'
-              exact={true}
-              component={CoworkingPage}
-            ></Route>
-            <Route path='/Bookings' exact={true}>
-              <Bookings />
-            </Route>
+              path='/'
+              exact
+              render={(props) => <Redirect to='/login' />}
+            />
+            <Route
+              path='/login'
+              exact
+              render={(props) => <Login {...props} />}
+            />
+            <Route
+              path='/register'
+              exact
+              render={(props) => <Register {...props} />}
+            />
+            {/* {user && (
+              // <IonRouterOutlet id='sub'>
+              <Route path='/addCoworking' exact={true}>
+                <AddCoworking user={user} />
+              </Route>
+            )} */}
+            {/* {user && (
+              <Route path='/WorkingPlaces' exact={true}>
+                <WorkingPlaces user={user} />
+              </Route>
+            )} */}
+            {/* {user && (
+              <Route path='/Coworkings' exact={true}>
+                <Coworkings user={user} />
+              </Route>
+            )} */}
+            {/* {user && (
+              <Route
+                path='/Coworkings/:id'
+                exact={true}
+                component={CoworkingPage}
+              ></Route>
+            )} */}
+            {/* {user && ( */}
+            {/* <IonSplitPane contentId='main'>
+            <Menu /> */}
+            <Route path='/Bookings' exact render={(props) => (user && !user.admin) ? <Bookings user={user} {...props} /> : <Redirect to='/login' />} />
+
+            {/* </Route> */}
+            <Route path='/Coworkings' exact render={(props) => user ? <Coworkings user={user} {...props} /> : <Redirect to='/login' />} />
+
+            {/* </Route> */}
+            <Route path='/Coworkings/:id' exact render={(props) => user ? <CoworkingPage user={user} {...props} /> : <Redirect to='/login' />} />
+
+            <Route path='/addCoworking' exact render={(props) => (user && user.admin) ? <AddCoworking user={user} {...props} /> : <Redirect to='/login' />} />
+
+            <Route path='/WorkingPlaces' exact render={(props) => (user && user.admin) ? <WorkingPlaces user={user} {...props} /> : <Redirect to='/login' />} />
+
+            {/* <Route render={() => <Redirect to='/login' />} /> */}
+
+            {/* </Route> */}
+            {/* </IonSplitPane> */}
+            {/* // </IonRouterOutlet> */}
+            {/* )} */}
           </IonRouterOutlet>
         </IonSplitPane>
       </IonReactRouter>
     </IonApp>
+    // <IonApp>
+    //   <IonReactRouter>
+    //     <IonRouterOutlet id='main'>
+    // <Route
+    //   path='/'
+    //   exact
+    //   render={(props) => <Redirect to='/login' />}
+    // />
+    // <Route
+    //   path='/login'
+    //   exact
+    //   render={(props) => <Login />}
+    // />
+    // <Route
+    //   path='/register'
+    //   exact
+    //   render={(props) => <Register />}
+    // />
+    //       {user && !user.isAdmin && (
+    //         <IonSplitPane contentId='main'>
+    //           <Menu />
+    //           <Route path='/Bookings' exact render={(props) => user ? <Bookings user={user} /> : <Redirect to='/login' />} />
+
+    //           {/* </Route> */}
+    //           <Route path='/Coworkings' exact render={(props) => user ? <Coworkings user={user} /> : <Redirect to='/login' />} />
+
+    //           {/* </Route> */}
+    //           <Route path='/Coworkings/:id' exact render={(props) => user ? <CoworkingPage user={user} {...props} /> : <Redirect to='/login' />} />
+
+    //           {/* </Route> */}
+    //         </IonSplitPane>
+    //       )}
+    //       {user && user.isAdmin && (
+    //         <>
+    //           <Route path='/addCoworking' exact render={(props) => user && user.isAdmin ? <AddCoworking user={user} /> : <Redirect to='/login' />} />
+
+    //           {/* </Route> */}
+    //           <Route path='/WorkingPlaces' exact render={(props) => user && user.isAdmin ? <WorkingPlaces user={user} /> : <Redirect to='/login' />} />
+
+    //           {/* </Route> */}
+    //         </>
+    //       )}
+    //       <Route render={() => <Redirect to='/login' />} />
+    //     </IonRouterOutlet>
+    //   </IonReactRouter>
+    // </IonApp>
   );
 };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -12,29 +12,55 @@ import {
   IonIcon,
   IonButtons,
   IonMenuButton,
+  IonAlert,
 } from '@ionic/react';
-import { closeCircleOutline } from 'ionicons/icons';
+import { checkmarkDoneCircleOutline, closeCircleOutline, sadOutline, businessOutline } from 'ionicons/icons';
+import { Booking, CustomizedState, DocumentDataInterface } from '../types';
+import { bookingsMock } from '../components/WorkingPlaceCard';
+import { cancelBooking, getBookingsByUserId } from '../firebase/functions';
+import { DocumentData } from 'firebase/firestore';
+import { RouteComponentProps } from 'react-router';
 
-const reservations = [
-  {
-    id: 1,
-    location: 'Kyiv, Ukraine',
-    date: '2023-05-17',
-    time: '19:00 - 20:00',
-  },
-  {
-    id: 2,
-    location: 'Lviv, Ukraine',
-    date: '2023-05-18',
-    time: '18:30 - 20:00',
-  },
-  // дополните данные
-];
+interface BookingsPageProps extends RouteComponentProps {
+  user: DocumentData;
+}
 
-const ReservationList: React.FC = () => {
-  const handleCancel = (id: number) => {
-    console.log(`Отмена резервации ${id}`);
-    // Здесь добавьте логику отмены бронирования
+const Bookings: React.FC<BookingsPageProps> = ({ user, history, location, match }) => {
+  const [showDeleteAlert, setShowDeleteAlert] = useState<[boolean, string]>([false, '']);
+  const [bookings, setBookings] = useState<Booking[]>(bookingsMock);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      const data = await getBookingsByUserId(user.id);
+      if (data.length) {
+        setBookings(data);
+      } else {
+        setBookings(bookingsMock);
+      }
+    };
+
+    fetchBookings();
+  }, [user.id]);
+
+  const handleMoveToCoworkingPage = async (coworkingId: string) => {
+    if (coworkingId.startsWith('co')) {
+      console.log('not moving cause it is mocked (not existing) coworking');
+    } else {
+      history.push(`/Coworkings/${coworkingId}`);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    console.log('Canceling booking: ', showDeleteAlert[1]);
+    if (!showDeleteAlert[1].startsWith('bo')) {
+      await cancelBooking(showDeleteAlert[1]);
+    }
+    setBookings(prevBookings =>
+      prevBookings.map(booking =>
+        booking.id === showDeleteAlert[1] ? { ...booking, status: 'canceled' } : booking
+      )
+    );
+    setShowDeleteAlert([false, '']);
   };
 
   return (
@@ -49,29 +75,67 @@ const ReservationList: React.FC = () => {
       </IonHeader>
       <IonContent>
         <IonList>
-          {reservations.map((reservation) => (
-            <IonItem key={reservation.id}>
-              <IonLabel>
-                <h2 style={{ fontSize: '0.8rem', color: 'black' }}>
-                  {reservation.location}
-                </h2>
-                <h3 style={{ fontSize: '0.6rem', color: 'gray' }}>
-                  {reservation.date} {reservation.time}
-                </h3>
-              </IonLabel>
-              <IonButton
-                fill='clear'
-                slot='end'
-                onClick={() => handleCancel(reservation.id)}
-              >
-                <IonIcon slot='icon-only' icon={closeCircleOutline} />
-              </IonButton>
-            </IonItem>
-          ))}
+          {bookings.map(
+            (
+              { id, coworkingId, date, status, timeSlot: { startTime, endTime } }
+            ) => (
+              <IonItem key={id} className='ion-item-booking ion-item-label' lines='none'>
+                <IonIcon
+                  slot='start'
+                  size='large'
+                  color='secondary'
+                  icon={businessOutline}
+                  onClick={() => handleMoveToCoworkingPage(coworkingId)}
+                />
+                <p style={{ marginLeft: '14px', marginRight: '7px', width: '50vw' }}>{`${date} ${startTime.hour}:${startTime.hour} - ${endTime.hour}:${endTime.minute}`}</p>
+                {
+                  status === 'active' ?
+                    <IonIcon
+                      slot='end'
+                      size='large'
+                      color='danger'
+                      icon={closeCircleOutline}
+                      onClick={() => setShowDeleteAlert([true, id])}
+                    /> : status === 'canceled' ?
+                      <IonIcon
+                        slot='end'
+                        size='large'
+                        color='medium'
+                        icon={sadOutline}
+                      /> : status === 'completed' ?
+                        <IonIcon
+                          slot='end'
+                          size='large'
+                          color='success'
+                          icon={checkmarkDoneCircleOutline}
+                        /> : null
+                }
+              </IonItem>
+            ))}
         </IonList>
+        <IonAlert
+          isOpen={showDeleteAlert[0]}
+          onDidDismiss={() => setShowDeleteAlert([false, ''])}
+          header={'Confirm Cancel'}
+          message={'cancel this booking?'}
+          className='custom-alert'
+          buttons={[
+            {
+              text: 'No',
+              role: 'cancel',
+              cssClass: 'secondary',
+              handler: () => setShowDeleteAlert([false, ''])
+            },
+            {
+              text: 'Yes',
+              role: 'destructive',
+              handler: handleConfirmDelete
+            }
+          ]}
+        />
       </IonContent>
     </IonPage>
   );
 };
 
-export default ReservationList;
+export default Bookings;

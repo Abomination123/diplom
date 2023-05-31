@@ -11,14 +11,19 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
   query,
   orderBy,
   limit,
   where,
   onSnapshot,
+  writeBatch,
   serverTimestamp,
   addDoc,
   deleteDoc,
+  updateDoc,
+  Timestamp,
+  DocumentData,
 } from '@firebase/firestore';
 
 const firebaseConfig = {
@@ -44,6 +49,7 @@ export {
   collection,
   setDoc,
   getDoc,
+  getDocs,
   query,
   orderBy,
   limit,
@@ -51,8 +57,12 @@ export {
   onSnapshot,
   addDoc,
   deleteDoc,
+  updateDoc,
+  writeBatch,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   serverTimestamp,
+  Timestamp,
+  getAuth
 };

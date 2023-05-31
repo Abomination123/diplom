@@ -1,0 +1,15 @@
+.input-location {
+  padding-left: 10px;
+  color: black;
+}
+
+.icon-end {
+  margin-left: 10px;
+}
+
+.add-skill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 50px;
+}

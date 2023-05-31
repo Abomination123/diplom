@@ -8,10 +8,9 @@ import {
   IonToolbar,
 } from '@ionic/react';
 import React, { useState } from 'react';
-import axios from 'axios';
 import { IonGrid, IonRow, IonCol } from '@ionic/react';
 import { personCircle } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { RouteComponentProps } from 'react-router-dom';
 import {
   IonItem,
   IonLabel,
@@ -27,6 +26,8 @@ import {
   getDoc,
   signInWithEmailAndPassword,
 } from '../firebase/config';
+import { getCoworkingId } from '../firebase/functions';
+import { User } from '../types';
 
 const validateEmail = (email: string) => {
   const re =
@@ -34,12 +35,13 @@ const validateEmail = (email: string) => {
     /^((?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\]))$/;
   return re.test(String(email).toLowerCase());
 };
-const Login: React.FC = () => {
-  const history = useHistory();
+
+const Login: React.FC<RouteComponentProps> = ({ history }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [iserror, setIserror] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
+
   const handleLogin = async () => {
     // if (!email) {
     //   setMessage('Please enter a valid email');
@@ -61,18 +63,24 @@ const Login: React.FC = () => {
     try {
       const resp = await signInWithEmailAndPassword(auth, email, password);
       const uid = resp.user.uid;
+      console.log(uid);
+
       const userRef = doc(db, 'users', uid);
 
       const firestoreDocument = await getDoc(userRef);
       if (firestoreDocument.exists()) {
         const user = firestoreDocument.data();
-        /* eslint-disable */
-        // @ts-ignore
-        // window.IDDD = uid;
         if (!user.admin) {
-          history.push('/Coworkings', { user });
+          history.push('/Coworkings');
         } else {
-          history.push('/addCoworking', { user });
+          const coworkingId = await getCoworkingId(uid);
+          console.log(coworkingId);
+
+          if (coworkingId) {
+            history.push('/WorkingPlaces', { coworkingId });
+          } else {
+            history.push('/addCoworking');
+          }
         }
       } else {
         alert('User does not exist anymore.');
@@ -132,7 +140,8 @@ const Login: React.FC = () => {
                 <IonInput
                   type='email'
                   value={email}
-                  onIonChange={(e) => setEmail(e.detail.value!)}
+                  autocomplete='email'
+                  onIonInput={(e) => setEmail(e.detail.value!)}
                 ></IonInput>
               </IonItem>
             </IonCol>
@@ -145,7 +154,8 @@ const Login: React.FC = () => {
                 <IonInput
                   type='password'
                   value={password}
-                  onIonChange={(e) => setPassword(e.detail.value!)}
+                  autocomplete='current-password'
+                  onIonInput={(e) => setPassword(e.detail.value!)}
                 ></IonInput>
               </IonItem>
             </IonCol>
