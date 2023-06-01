@@ -223,7 +223,6 @@ const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
     } catch (error) {
       console.log(error);
     }
-
   };
 
   return (
@@ -262,7 +261,7 @@ const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
                 <IonInput
                   type='text'
                   value={name}
-                  onIonChange={(e) => setName(e.detail.value!)}
+                  onIonInput={(e) => setName(e.detail.value!)}
                 ></IonInput>
               </IonItem>
             </IonCol>
@@ -275,7 +274,7 @@ const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
                 <IonInput
                   type='text'
                   value={location}
-                  onIonChange={(e) => setLocation(e.detail.value!)}
+                  onIonInput={(e) => setLocation(e.detail.value!)}
                 ></IonInput>
               </IonItem>
             </IonCol>
@@ -287,7 +286,7 @@ const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
                 <IonLabel position='floating'>Description</IonLabel>
                 <IonTextarea
                   value={description}
-                  onIonChange={(e) => setDescription(e.detail.value!)}
+                  onIonInput={(e) => setDescription(e.detail.value!)}
                 ></IonTextarea>
               </IonItem>
             </IonCol>
@@ -308,7 +307,7 @@ const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
                   <IonInput
                     type='url'
                     value={url}
-                    onIonChange={(e) =>
+                    onIonInput={(e) =>
                       handleImageUrl(e.detail.value || '', index)
                     }
                   ></IonInput>

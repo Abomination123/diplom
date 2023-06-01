@@ -43,22 +43,22 @@ const Login: React.FC<RouteComponentProps> = ({ history }) => {
   const [message, setMessage] = useState<string>('');
 
   const handleLogin = async () => {
-    // if (!email) {
-    //   setMessage('Please enter a valid email');
-    //   setIserror(true);
-    //   return;
-    // }
-    // if (validateEmail(email) === false) {
-    //   setMessage('Your email is invalid');
-    //   setIserror(true);
-    //   return;
-    // }
+    if (!email) {
+      setMessage('Please enter a valid email');
+      setIserror(true);
+      return;
+    }
+    if (validateEmail(email) === false) {
+      setMessage('Your email is invalid');
+      setIserror(true);
+      return;
+    }
 
-    // if (!password || password.length < 6) {
-    //   setMessage('Please enter your password');
-    //   setIserror(true);
-    //   return;
-    // }
+    if (!password || password.length < 6) {
+      setMessage('Please enter your password');
+      setIserror(true);
+      return;
+    }
 
     try {
       const resp = await signInWithEmailAndPassword(auth, email, password);

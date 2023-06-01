@@ -16,7 +16,7 @@ import {
 } from '@ionic/react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper';
-import { CoworkingItemType } from '../types'
+import { CoworkingItemType } from '../types';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -35,19 +35,23 @@ const CoworkingItem: React.FC<CoworkingItemProps> = ({
   // onButtonBookClick
 }) => {
   return (
-    <IonCard className="coworking-card">
+    <IonCard className='coworking-card'>
       <IonCardHeader>
         <IonRow>
-          <IonCol size="6">
-            <Swiper modules={[Pagination]} pagination={true} className="image-swiper">
+          <IonCol size='6'>
+            <Swiper
+              modules={[Pagination]}
+              pagination={true}
+              className='image-swiper'
+            >
               {imageUrls.map((imageUrl, index) => (
                 <SwiperSlide key={index}>
-                  <IonImg className="coworking-image" src={imageUrl} />
+                  <IonImg className='coworking-image' src={imageUrl} />
                 </SwiperSlide>
               ))}
             </Swiper>
           </IonCol>
-          <IonCol size="6" className="coworking-info">
+          <IonCol size='6' className='coworking-info'>
             <IonCardTitle className='coworking-title'>{name}</IonCardTitle>
             <IonCardSubtitle>{location}</IonCardSubtitle>
             {networking && (
@@ -69,7 +73,8 @@ const CoworkingItem: React.FC<CoworkingItemProps> = ({
               className='book-button'
               size='small'
             >
-              <IonLabel>Book</IonLabel> &nbsp;<IonIcon icon={arrowForwardCircleOutline} size='small' />
+              <IonLabel>Book</IonLabel> &nbsp;
+              <IonIcon icon={arrowForwardCircleOutline} size='small' />
             </IonButton>
           </IonCol>
         </IonRow>
