@@ -1,3 +1,5 @@
+/* eslint-disable */
+//@ts-nocheck
 import {
   IonContent,
   IonHeader,
@@ -15,7 +17,7 @@ import {
   IonAlert,
   IonTextarea,
 } from '@ionic/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { businessOutline } from 'ionicons/icons';
 import { RouteComponentProps } from 'react-router';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -33,6 +35,11 @@ import {
 import { CustomizedState } from '../types';
 import { DocumentData } from 'firebase/firestore';
 
+// import PlacesAutocomplete, {
+//   geocodeByAddress,
+//   getLatLng,
+// } from 'react-places-autocomplete';
+
 interface BookingsPageProps extends RouteComponentProps {
   user: DocumentData;
 }
@@ -44,10 +51,6 @@ const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
   const [iserror, setIserror] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
 
-  // const loca = useLocation();
-  // const state = loca.state as CustomizedState;
-  // console.log(loca);
-
   const handleImageUrl = (url: string, index: number) => {
     setImageUrls((prevUrls) => {
       const newUrls = [...prevUrls];
@@ -55,6 +58,20 @@ const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
       return newUrls;
     });
   };
+
+  const locationInputRef = useRef(null);
+
+  // const handleSelect = async (value: any) => {
+  //   const results = await geocodeByAddress(value);
+  //   const latLng = await getLatLng(results[0]);
+  //   setLocation(value);
+  // };
+
+  useEffect(() => {
+    if (window.google) {
+      new window.google.maps.places.Autocomplete(locationInputRef.current);
+    }
+  }, []);
 
   const handleSubmit = async () => {
     if (!name) {
@@ -271,11 +288,54 @@ const AddCoworking: React.FC<BookingsPageProps> = ({ user, history }) => {
             <IonCol>
               <IonItem>
                 <IonLabel position='floating'>Location</IonLabel>
+                {/* <PlacesAutocomplete
+                  value={location}
+                  onChange={setLocation}
+                  onSelect={handleSelect}
+                >
+                  {({
+                    getInputProps,
+                    suggestions,
+                    getSuggestionItemProps,
+                    loading,
+                  }: {
+                    getInputProps: any;
+                    suggestions: any;
+                    getSuggestionItemProps: any;
+                    loading: any;
+                  }) => (
+                    <div> */}
                 <IonInput
                   type='text'
                   value={location}
+                  // ref={locationInputRef}
                   onIonInput={(e) => setLocation(e.detail.value!)}
-                ></IonInput>
+                />
+                {/* <div className='autocomplete-dropdown-container'>
+                        {loading && <div>Loading...</div>}
+                        {suggestions.map((suggestion: any) => {
+                          const className = suggestion.active
+                            ? 'suggestion-item--active'
+                            : 'suggestion-item';
+                          // inline style for demonstration purpose
+                          const style = suggestion.active
+                            ? { backgroundColor: '#fafafa', cursor: 'pointer' }
+                            : { backgroundColor: '#ffffff', cursor: 'pointer' };
+                          return (
+                            <div
+                              {...getSuggestionItemProps(suggestion, {
+                                className,
+                                style,
+                              })}
+                            >
+                              <span>{suggestion.description}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </PlacesAutocomplete> */}
               </IonItem>
             </IonCol>
           </IonRow>

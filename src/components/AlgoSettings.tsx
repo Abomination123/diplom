@@ -20,7 +20,6 @@ import { addCircleOutline, removeCircleOutline } from 'ionicons/icons';
 import { RangeValue, newSettings } from '../types';
 import './AlgoSettings.css';
 
-
 interface AlgoSettingsProps {
   location: string;
   skills: string[];
@@ -51,12 +50,6 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
     setUserSkills(skills);
     setUserPriceRange(priceRange);
   }, [location, skills, priceRange]);
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     window.dispatchEvent(new Event('resize'));
-  //   }, 300);
-  // }, []);
 
   const addSkill = () => {
     setUserSkills([...userSkills, '']);
@@ -129,7 +122,9 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
                 lower: userPriceRange?.lower ?? 20,
                 upper: userPriceRange?.upper ?? 80,
               }}
-              onIonInput={(e) => setUserPriceRange(e.detail.value as RangeValue)}
+              onIonInput={(e) =>
+                setUserPriceRange(e.detail.value as RangeValue)
+              }
             >
               <IonLabel slot='start'>{userPriceRange?.lower ?? 0}</IonLabel>
               <IonLabel slot='end'>{userPriceRange?.upper ?? 100}</IonLabel>

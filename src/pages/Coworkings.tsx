@@ -22,9 +22,17 @@ import { optionsOutline, analyticsOutline } from 'ionicons/icons';
 import CoworkingItem from '../components/CoworkingItem';
 import AlgoSettings from '../components/AlgoSettings';
 
-import { CoworkingItemType, DocumentDataInterface, newSettings, RangeValue } from '../types';
+import {
+  CoworkingItemType,
+  DocumentDataInterface,
+  newSettings,
+  RangeValue,
+} from '../types';
 import { fetchCoworkings, updateUserSkills } from '../firebase/functions';
 import { DocumentData } from 'firebase/firestore';
+
+import { Geolocation } from '@capacitor/geolocation';
+import { geocode } from '../utils/utils';
 
 interface CoworkingsPageProps extends RouteComponentProps {
   user: DocumentData;
@@ -34,11 +42,12 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
   const [userSkills, setUserSkills] = useState<string[]>(user.userSkills);
   const [page, setPage] = useState(1);
   const [priceRange, setPriceRange] = useState({ lower: 20, upper: 80 });
+  const [location, setLocation] = useState(user.location);
   const [isLoading, setIsLoading] = useState(false);
   const pageSize = 15;
 
   const [present, dismiss] = useIonModal(AlgoSettings, {
-    location: 'Kyiv, Pechersk',
+    location: location,
     skills: userSkills,
     priceRange: priceRange,
     onDismiss: (
@@ -56,12 +65,37 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
         if (ev.detail.role === 'confirm') {
           setUserSkills(ev.detail.data.skills);
           updateUserSkills(user.id, ev.detail.data.skills);
-          if (!ev.detail.data) { fetchCoworkingsBatch(ev.detail.data); }
+          if (!ev.detail.data) {
+            fetchCoworkingsBatch(ev.detail.data);
+          }
         }
       },
     });
   };
 
+  useEffect(() => {
+    const getLocation = async () => {
+      if (!user.location) {
+        try {
+          const position = await Geolocation.getCurrentPosition();
+          // Use position.coords.latitude and position.coords.longitude to get the location details
+          // This is where you might want to make a call to a geocoding API (like Google's or another) to transform
+          // the latitude and longitude into a human readable location
+          // Assuming you have a geocoding function, it could look something like this:
+          const locationFromGeocode = await geocode(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+          setLocation(locationFromGeocode);
+          console.log(locationFromGeocode);
+        } catch (err) {
+          console.error('Error getting location', err);
+        }
+      }
+    };
+
+    getLocation();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = fetchCoworkings(setData);
@@ -75,9 +109,11 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`api/algo-restart/${location}/${userSkills[0]}/${priceRange.upper}/${page}`);
+      const res = await fetch(
+        `api/algo-restart/${location}/${userSkills[0]}/${priceRange.upper}/${page}`
+      );
       const { coworkings } = await res.json();
-      setData(prevData => [...prevData, ...coworkings]);
+      setData((prevData) => [...prevData, ...coworkings]);
       setPage(page + 1);
     } catch (err) {
       console.error(err);
@@ -101,7 +137,7 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
           <IonButtons slot='start'>
             <IonMenuButton />
           </IonButtons>
-          <IonTitle>{ }</IonTitle>
+          <IonTitle>{}</IonTitle>
           <IonIcon
             slot='end'
             icon={analyticsOutline}
@@ -119,16 +155,15 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
               key={coworking.id}
               coworking={coworking}
               networking={index === 1}
-            // onButtonBookClick={handleButtonBookClick}
+              // onButtonBookClick={handleButtonBookClick}
             />
           ))}
         </IonList>
-        <IonInfiniteScroll threshold="5%" onIonInfinite={handleEnd}>
+        <IonInfiniteScroll threshold='5%' onIonInfinite={handleEnd}>
           <IonInfiniteScrollContent
-            loadingSpinner="bubbles"
-            loadingText="Loading more data..."
-          >
-          </IonInfiniteScrollContent>
+            loadingSpinner='bubbles'
+            loadingText='Loading more data...'
+          ></IonInfiniteScrollContent>
         </IonInfiniteScroll>
       </IonContent>
     </IonPage>

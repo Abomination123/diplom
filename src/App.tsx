@@ -89,9 +89,7 @@ const App: React.FC = () => {
   }, [auth]);
 
   if (loading) {
-    return (
-      <IonPage>Loading...</IonPage> // replace this with your loading component
-    );
+    return <IonPage>Loading...</IonPage>;
   }
 
   return (
@@ -118,32 +116,6 @@ const App: React.FC = () => {
               exact
               render={(props) => <Register {...props} />}
             />
-            {/* {user && (
-              // <IonRouterOutlet id='sub'>
-              <Route path='/addCoworking' exact={true}>
-                <AddCoworking user={user} />
-              </Route>
-            )} */}
-            {/* {user && (
-              <Route path='/WorkingPlaces' exact={true}>
-                <WorkingPlaces user={user} />
-              </Route>
-            )} */}
-            {/* {user && (
-              <Route path='/Coworkings' exact={true}>
-                <Coworkings user={user} />
-              </Route>
-            )} */}
-            {/* {user && (
-              <Route
-                path='/Coworkings/:id'
-                exact={true}
-                component={CoworkingPage}
-              ></Route>
-            )} */}
-            {/* {user && ( */}
-            {/* <IonSplitPane contentId='main'>
-            <Menu /> */}
             <Route
               path='/Bookings'
               exact
@@ -155,8 +127,6 @@ const App: React.FC = () => {
                 )
               }
             />
-
-            {/* </Route> */}
             <Route
               path='/Coworkings'
               exact
@@ -168,8 +138,6 @@ const App: React.FC = () => {
                 )
               }
             />
-
-            {/* </Route> */}
             <Route
               path='/Coworkings/:id'
               exact
@@ -205,63 +173,10 @@ const App: React.FC = () => {
                 )
               }
             />
-
-            {/* <Route render={() => <Redirect to='/login' />} /> */}
-
-            {/* </Route> */}
-            {/* </IonSplitPane> */}
-            {/* // </IonRouterOutlet> */}
-            {/* )} */}
           </IonRouterOutlet>
         </IonSplitPane>
       </IonReactRouter>
     </IonApp>
-    // <IonApp>
-    //   <IonReactRouter>
-    //     <IonRouterOutlet id='main'>
-    // <Route
-    //   path='/'
-    //   exact
-    //   render={(props) => <Redirect to='/login' />}
-    // />
-    // <Route
-    //   path='/login'
-    //   exact
-    //   render={(props) => <Login />}
-    // />
-    // <Route
-    //   path='/register'
-    //   exact
-    //   render={(props) => <Register />}
-    // />
-    //       {user && !user.isAdmin && (
-    //         <IonSplitPane contentId='main'>
-    //           <Menu />
-    //           <Route path='/Bookings' exact render={(props) => user ? <Bookings user={user} /> : <Redirect to='/login' />} />
-
-    //           {/* </Route> */}
-    //           <Route path='/Coworkings' exact render={(props) => user ? <Coworkings user={user} /> : <Redirect to='/login' />} />
-
-    //           {/* </Route> */}
-    //           <Route path='/Coworkings/:id' exact render={(props) => user ? <CoworkingPage user={user} {...props} /> : <Redirect to='/login' />} />
-
-    //           {/* </Route> */}
-    //         </IonSplitPane>
-    //       )}
-    //       {user && user.isAdmin && (
-    //         <>
-    //           <Route path='/addCoworking' exact render={(props) => user && user.isAdmin ? <AddCoworking user={user} /> : <Redirect to='/login' />} />
-
-    //           {/* </Route> */}
-    //           <Route path='/WorkingPlaces' exact render={(props) => user && user.isAdmin ? <WorkingPlaces user={user} /> : <Redirect to='/login' />} />
-
-    //           {/* </Route> */}
-    //         </>
-    //       )}
-    //       <Route render={() => <Redirect to='/login' />} />
-    //     </IonRouterOutlet>
-    //   </IonReactRouter>
-    // </IonApp>
   );
 };
 
