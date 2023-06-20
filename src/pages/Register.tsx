@@ -154,7 +154,7 @@ const Register: React.FC<RouteComponentProps> = ({ history }) => {
                 <IonInput
                   type='email'
                   value={email}
-                  onIonChange={(e) => setEmail(e.detail.value!)}
+                  onIonInput={(e) => setEmail(e.detail.value!)}
                 ></IonInput>
               </IonItem>
             </IonCol>
@@ -166,7 +166,7 @@ const Register: React.FC<RouteComponentProps> = ({ history }) => {
                 <IonInput
                   type='password'
                   value={password}
-                  onIonChange={(e) => setPassword(e.detail.value!)}
+                  onIonInput={(e) => setPassword(e.detail.value!)}
                 ></IonInput>
               </IonItem>
             </IonCol>
@@ -181,7 +181,7 @@ const Register: React.FC<RouteComponentProps> = ({ history }) => {
                     <IonInput
                       value={skill}
                       placeholder='Enter a skill'
-                      onIonChange={(e) =>
+                      onIonInput={(e) =>
                         handleSkillChange(e.detail.value || '', index)
                       }
                     />

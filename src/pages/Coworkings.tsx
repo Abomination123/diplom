@@ -64,7 +64,7 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
       onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
         if (ev.detail.role === 'confirm') {
           setUserSkills(ev.detail.data.skills);
-          updateUserSkills(user.id, ev.detail.data.skills);
+          // updateUserSkills(user.id, ev.detail.data.skills);
           if (!ev.detail.data) {
             fetchCoworkingsBatch(ev.detail.data);
           }
@@ -110,7 +110,7 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
 
     try {
       const res = await fetch(
-        `api/algo-restart/${location}/${userSkills[0]}/${priceRange.upper}/${page}`
+        `api/algo-restart/${location}/${userSkills}/${priceRange.upper}/${page}`
       );
       const { coworkings } = await res.json();
       setData((prevData) => [...prevData, ...coworkings]);
@@ -137,7 +137,7 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
           <IonButtons slot='start'>
             <IonMenuButton />
           </IonButtons>
-          <IonTitle>{}</IonTitle>
+          <IonTitle>{ }</IonTitle>
           <IonIcon
             slot='end'
             icon={analyticsOutline}
@@ -155,7 +155,7 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
               key={coworking.id}
               coworking={coworking}
               networking={index === 1}
-              // onButtonBookClick={handleButtonBookClick}
+            // onButtonBookClick={handleButtonBookClick}
             />
           ))}
         </IonList>
