@@ -1,8 +1,8 @@
-import { DocumentData, Timestamp } from "firebase/firestore";
+import { DocumentData, Timestamp } from 'firebase/firestore';
 
 export type TimeSlot = {
-  startTime: { hour: string, minute: string };
-  endTime: { hour: string, minute: string };
+  startTime: { hour: string; minute: string };
+  endTime: { hour: string; minute: string };
 };
 
 export type AvailableDate = {
@@ -33,7 +33,7 @@ export type Booking = {
   status?: 'active' | 'completed' | 'canceled';
   date?: string;
   timeSlot: TimeSlot;
-}
+};
 
 export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
@@ -52,7 +52,7 @@ export type CoworkingItemType = {
   location: string;
   imageUrls: string[];
   description: string;
-  networking?: boolean;
+  skillAnalysisTopic?: string;
 };
 
 export type RangeValue = {

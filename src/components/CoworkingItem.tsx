@@ -13,6 +13,8 @@ import {
   IonItem,
   IonCardSubtitle,
   IonIcon,
+  IonPopover,
+  IonContent,
 } from '@ionic/react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper';
@@ -22,16 +24,17 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import './CoworkingItem.css'; // добавлен файл со стилями
 
-import { arrowForwardCircleOutline } from 'ionicons/icons';
+import {
+  arrowForwardCircleOutline,
+  informationCircleOutline,
+} from 'ionicons/icons';
 interface CoworkingItemProps {
   coworking: CoworkingItemType;
-  networking: boolean;
   // onButtonBookClick: (coworking: CoworkingItemType) => void;
 }
 
 const CoworkingItem: React.FC<CoworkingItemProps> = ({
-  coworking: { id, name, location, description, imageUrls },
-  networking,
+  coworking: { id, name, location, description, imageUrls, skillAnalysisTopic },
   // onButtonBookClick
 }) => {
   return (
@@ -54,10 +57,20 @@ const CoworkingItem: React.FC<CoworkingItemProps> = ({
           <IonCol size='6' className='coworking-info'>
             <IonCardTitle className='coworking-title'>{name}</IonCardTitle>
             <IonCardSubtitle>{location}</IonCardSubtitle>
-            {networking && (
-              <IonBadge className='badge-networking' color='primary'>
-                <small>Networking potential</small>
-              </IonBadge>
+            {skillAnalysisTopic && (
+              <>
+                <IonBadge className='badge-networking' color='primary'>
+                  <small>Networking potential</small>
+                  {/* <IonIcon icon={informationCircleOutline} size='small' />
+                  <IonLabel>{`Match by ${skillAnalysisTopic.toUpperCase()}`}</IonLabel> */}
+                </IonBadge>
+                <IonIcon icon={informationCircleOutline} id='right-end' />
+                <IonPopover trigger='right-end' side='right' alignment='end'>
+                  <IonContent class='ion-padding'>
+                    {skillAnalysisTopic}
+                  </IonContent>
+                </IonPopover>
+              </>
             )}
             <IonButton
               // onClick={e => onButtonBookClick(

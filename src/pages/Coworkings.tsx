@@ -28,10 +28,10 @@ import {
   newSettings,
   RangeValue,
 } from '../types';
-import { fetchCoworkings, updateUserSkills } from '../firebase/functions';
+import { fetchCoworkings, updateUserDetails } from '../firebase/functions';
 import { DocumentData } from 'firebase/firestore';
 
-import { Geolocation } from '@capacitor/geolocation';
+import { Geolocation, PermissionStatus } from '@capacitor/geolocation';
 import { geocode } from '../utils/utils';
 
 interface CoworkingsPageProps extends RouteComponentProps {
@@ -41,18 +41,54 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
   const [data, setData] = useState<CoworkingItemType[]>([]);
   const [userSkills, setUserSkills] = useState<string[]>(user.userSkills);
   const [page, setPage] = useState(1);
-  const [priceRange, setPriceRange] = useState({ lower: 20, upper: 80 });
+  const [price, setPrice] = useState<number | null>(null);
   const [location, setLocation] = useState(user.location);
   const [isLoading, setIsLoading] = useState(false);
   const pageSize = 15;
 
+  const getLocation = async (modalIcon?: boolean) => {
+    try {
+      // Check the current permission status
+      const status = await Geolocation.checkPermissions();
+
+      // If permissions are not granted, request them
+      if (status.location !== 'granted') {
+        const newStatus = await Geolocation.requestPermissions();
+        if (newStatus.location !== 'granted') {
+          console.log('Location permission was not granted.');
+          return;
+        }
+      }
+
+      const position = await Geolocation.getCurrentPosition();
+      const locationFromGeocode = await geocode(
+        position.coords.latitude,
+        position.coords.longitude
+      );
+      if (!modalIcon) {
+        setLocation(locationFromGeocode);
+      }
+      console.log(locationFromGeocode);
+      return locationFromGeocode;
+    } catch (err) {
+      console.error('Error getting location', err);
+    }
+  };
+
+  useEffect(() => {
+    if (!user.location) {
+      getLocation();
+    }
+  }, []);
+
   const [present, dismiss] = useIonModal(AlgoSettings, {
     location: location,
     skills: userSkills,
-    priceRange: priceRange,
+    price: price,
+    getLocation: getLocation,
     onDismiss: (
       data:
-        | { location: string; priceRange: RangeValue; skills: string[] }
+        | { location: string; price: number | null; skills: string[] }
         | null
         | undefined,
       role: string
@@ -61,12 +97,38 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
 
   const openModal = () => {
     present({
-      onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
-        if (ev.detail.role === 'confirm') {
-          setUserSkills(ev.detail.data.skills);
+      onWillDismiss: async (ev: CustomEvent<OverlayEventDetail>) => {
+        if (ev.detail.role === 'confirm' && ev.detail.data) {
+          const newSkills = ev.detail.data.skills;
+          const newLocation = ev.detail.data.location;
+          const newPrice = ev.detail.data.price;
+
+          let needUpdate = false;
+
+          if (newSkills !== userSkills) {
+            setUserSkills(newSkills);
+            needUpdate = true;
+          }
+
+          if (newLocation !== location) {
+            setLocation(newLocation);
+            needUpdate = true;
+          }
+
+          if (newPrice !== price) {
+            setPrice(newPrice);
+            needUpdate = true;
+          }
+
+          // setUserSkills(ev.detail.data.skills);
           // updateUserSkills(user.id, ev.detail.data.skills);
-          if (!ev.detail.data) {
-            fetchCoworkingsBatch(ev.detail.data);
+          if (needUpdate) {
+            await fetchCoworkingsBatch(
+              { location: newLocation, skills: newSkills, price: newPrice },
+              true
+            );
+
+            await updateUserDetails(user.id, newSkills, newLocation);
           }
         }
       },
@@ -74,47 +136,35 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
   };
 
   useEffect(() => {
-    const getLocation = async () => {
-      if (!user.location) {
-        try {
-          const position = await Geolocation.getCurrentPosition();
-          // Use position.coords.latitude and position.coords.longitude to get the location details
-          // This is where you might want to make a call to a geocoding API (like Google's or another) to transform
-          // the latitude and longitude into a human readable location
-          // Assuming you have a geocoding function, it could look something like this:
-          const locationFromGeocode = await geocode(
-            position.coords.latitude,
-            position.coords.longitude
-          );
-          setLocation(locationFromGeocode);
-          console.log(locationFromGeocode);
-        } catch (err) {
-          console.error('Error getting location', err);
-        }
-      }
-    };
+    if (data.length === 0) {
+      fetchCoworkingsBatch({ location, skills: userSkills, price }, true);
+    }
+    // const unsubscribe = fetchCoworkings(setData);
 
-    getLocation();
+    // return () => {
+    //   unsubscribe();
+    // };
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = fetchCoworkings(setData);
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  const fetchCoworkingsBatch = async (data: any) => {
+  const fetchCoworkingsBatch = async (data: any, reload?: boolean) => {
     setIsLoading(true);
 
     try {
       const res = await fetch(
-        `api/algo-restart/${location}/${userSkills}/${priceRange.upper}/${page}`
+        `https://getcoworkings-apuh4o6p2a-uc.a.run.app?userId=${user.id}${
+          data && data.location ? `&location=${data.location}` : ''
+        }${data && data.skills ? `&newSkills=${data.skills.join(',')}` : ''}${
+          data && data.price ? `&price=${data.price}` : ''
+        }` //&page=${page}
       );
       const { coworkings } = await res.json();
-      setData((prevData) => [...prevData, ...coworkings]);
-      setPage(page + 1);
+      if (reload) {
+        setData(coworkings);
+        setPage(1);
+      } else if (data?.page > 1) {
+        setData((prevData) => [...prevData, ...coworkings]);
+        setPage(data.page);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -124,7 +174,11 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
 
   const handleEnd = async (ev: InfiniteScrollCustomEvent) => {
     if (data.length < 45) {
-      await fetchCoworkingsBatch(userSkills);
+      // await fetchCoworkingsBatch(
+      //   { location, skills: userSkills, price },
+      //   false
+      // );
+      // setPage((prevPage) => prevPage + 1);
     }
 
     ev.target.complete();
@@ -137,7 +191,7 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
           <IonButtons slot='start'>
             <IonMenuButton />
           </IonButtons>
-          <IonTitle>{ }</IonTitle>
+          <IonTitle>{}</IonTitle>
           <IonIcon
             slot='end'
             icon={analyticsOutline}
@@ -149,13 +203,18 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonLoading
+          isOpen={isLoading}
+          onDidDismiss={() => setIsLoading(false)}
+          message={'Please, wait...'}
+          // duration={5000}
+        />
         <IonList>
           {data.map((coworking, index) => (
             <CoworkingItem
               key={coworking.id}
               coworking={coworking}
-              networking={index === 1}
-            // onButtonBookClick={handleButtonBookClick}
+              // onButtonBookClick={handleButtonBookClick}
             />
           ))}
         </IonList>

@@ -14,7 +14,12 @@ import {
   IonMenuButton,
   IonAlert,
 } from '@ionic/react';
-import { checkmarkDoneCircleOutline, closeCircleOutline, sadOutline, businessOutline } from 'ionicons/icons';
+import {
+  checkmarkDoneCircleOutline,
+  closeCircleOutline,
+  sadOutline,
+  businessOutline,
+} from 'ionicons/icons';
 import { Booking, CustomizedState, DocumentDataInterface } from '../types';
 import { bookingsMock } from '../components/WorkingPlaceCard';
 import { cancelBooking, getBookingsByUserId } from '../firebase/functions';
@@ -25,8 +30,16 @@ interface BookingsPageProps extends RouteComponentProps {
   user: DocumentData;
 }
 
-const Bookings: React.FC<BookingsPageProps> = ({ user, history, location, match }) => {
-  const [showDeleteAlert, setShowDeleteAlert] = useState<[boolean, string]>([false, '']);
+const Bookings: React.FC<BookingsPageProps> = ({
+  user,
+  history,
+  location,
+  match,
+}) => {
+  const [showDeleteAlert, setShowDeleteAlert] = useState<[boolean, string]>([
+    false,
+    '',
+  ]);
   const [bookings, setBookings] = useState<Booking[]>(bookingsMock);
 
   useEffect(() => {
@@ -55,13 +68,17 @@ const Bookings: React.FC<BookingsPageProps> = ({ user, history, location, match 
     if (!showDeleteAlert[1].startsWith('bo')) {
       await cancelBooking(showDeleteAlert[1]);
     }
-    setBookings(prevBookings =>
-      prevBookings.map(booking =>
-        booking.id === showDeleteAlert[1] ? { ...booking, status: 'canceled' } : booking
+    setBookings((prevBookings) =>
+      prevBookings.map((booking) =>
+        booking.id === showDeleteAlert[1]
+          ? { ...booking, status: 'canceled' }
+          : booking
       )
     );
     setShowDeleteAlert([false, '']);
   };
+
+  console.log(bookings);
 
   return (
     <IonPage>
@@ -76,10 +93,18 @@ const Bookings: React.FC<BookingsPageProps> = ({ user, history, location, match 
       <IonContent>
         <IonList>
           {bookings.map(
-            (
-              { id, coworkingId, date, status, timeSlot: { startTime, endTime } }
-            ) => (
-              <IonItem key={id} className='ion-item-booking ion-item-label' lines='none'>
+            ({
+              id,
+              coworkingId,
+              date,
+              status,
+              timeSlot: { startTime, endTime },
+            }) => (
+              <IonItem
+                key={id}
+                className='ion-item-booking ion-item-label'
+                lines='none'
+              >
                 <IonIcon
                   slot='start'
                   size='large'
@@ -87,31 +112,39 @@ const Bookings: React.FC<BookingsPageProps> = ({ user, history, location, match 
                   icon={businessOutline}
                   onClick={() => handleMoveToCoworkingPage(coworkingId)}
                 />
-                <p style={{ marginLeft: '14px', marginRight: '7px', width: '50vw' }}>{`${date} ${startTime.hour}:${startTime.hour} - ${endTime.hour}:${endTime.minute}`}</p>
-                {
-                  status === 'active' ?
-                    <IonIcon
-                      slot='end'
-                      size='large'
-                      color='danger'
-                      icon={closeCircleOutline}
-                      onClick={() => setShowDeleteAlert([true, id])}
-                    /> : status === 'canceled' ?
-                      <IonIcon
-                        slot='end'
-                        size='large'
-                        color='medium'
-                        icon={sadOutline}
-                      /> : status === 'completed' ?
-                        <IonIcon
-                          slot='end'
-                          size='large'
-                          color='success'
-                          icon={checkmarkDoneCircleOutline}
-                        /> : null
-                }
+                <p
+                  style={{
+                    marginLeft: '14px',
+                    marginRight: '7px',
+                    width: '50vw',
+                  }}
+                >{`${date} ${startTime.hour}:${startTime.hour} - ${endTime.hour}:${endTime.minute}`}</p>
+                {status === 'active' ? (
+                  <IonIcon
+                    slot='end'
+                    size='large'
+                    color='danger'
+                    icon={closeCircleOutline}
+                    onClick={() => setShowDeleteAlert([true, id])}
+                  />
+                ) : status === 'canceled' ? (
+                  <IonIcon
+                    slot='end'
+                    size='large'
+                    color='medium'
+                    icon={sadOutline}
+                  />
+                ) : status === 'completed' ? (
+                  <IonIcon
+                    slot='end'
+                    size='large'
+                    color='success'
+                    icon={checkmarkDoneCircleOutline}
+                  />
+                ) : null}
               </IonItem>
-            ))}
+            )
+          )}
         </IonList>
         <IonAlert
           isOpen={showDeleteAlert[0]}
@@ -124,13 +157,13 @@ const Bookings: React.FC<BookingsPageProps> = ({ user, history, location, match 
               text: 'No',
               role: 'cancel',
               cssClass: 'secondary',
-              handler: () => setShowDeleteAlert([false, ''])
+              handler: () => setShowDeleteAlert([false, '']),
             },
             {
               text: 'Yes',
               role: 'destructive',
-              handler: handleConfirmDelete
-            }
+              handler: handleConfirmDelete,
+            },
           ]}
         />
       </IonContent>

@@ -54,7 +54,7 @@ const compareTimeSlots = (existingSlot: TimeSlot, newSlot: TimeSlot) => {
 };
 
 export const geocode = async (lat: any, lng: any) => {
-  const apiKey = 'AIzaSyAuTpbyxiry3QOaCZzFwvWEDswiVnNEvYk'; // replace with your API key
+  const apiKey = 'AIzaSyAuTpbyxiry3QOaCZzFwvWEDswiVnNEvYk';
   const response = await fetch(
     `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=en&key=${apiKey}`
   );

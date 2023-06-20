@@ -6,7 +6,7 @@ import {
   Booking,
   User,
   TimeSlot,
-  CreateBookingData
+  CreateBookingData,
 } from '../types';
 import {
   app,
@@ -32,7 +32,10 @@ import {
   writeBatch,
 } from './config';
 
-export const createWorkingPlace = async (workingPlace: Omit<WorkingPlace, 'id' | 'createdAt'>, coworkingId: string) => {
+export const createWorkingPlace = async (
+  workingPlace: Omit<WorkingPlace, 'id' | 'createdAt'>,
+  coworkingId: string
+) => {
   try {
     const timestamp = serverTimestamp();
     const workingPlaceRef = collection(db, 'workingPlaces');
@@ -48,12 +51,19 @@ export const createWorkingPlace = async (workingPlace: Omit<WorkingPlace, 'id' |
   }
 };
 
-export const createBooking = async (bookingData: CreateBookingData, dates: string[]) => {
+export const createBooking = async (
+  bookingData: CreateBookingData,
+  dates: string[]
+) => {
   try {
     const bookingsRef = collection(db, 'bookings');
     const batch = writeBatch(db);
 
-    const workingPlaceRef = doc(db, 'workingPlaces', bookingData.workingPlaceId);
+    const workingPlaceRef = doc(
+      db,
+      'workingPlaces',
+      bookingData.workingPlaceId
+    );
     const workingPlaceSnap = await getDoc(workingPlaceRef);
 
     if (!workingPlaceSnap.exists()) {
@@ -61,14 +71,19 @@ export const createBooking = async (bookingData: CreateBookingData, dates: strin
     }
 
     const workingPlaceData = workingPlaceSnap.data() as WorkingPlace;
-    const availableDates: { [date: string]: TimeSlot[] } = workingPlaceData.availableDates || {};
+    const availableDates: { [date: string]: TimeSlot[] } =
+      workingPlaceData.availableDates || {};
 
     for (const date of dates) {
       const bookingRef = doc(bookingsRef);
       if (availableDates[date]) {
-        availableDates[date] = availableDates[date].filter(timeSlot =>
-          !(timeSlot.startTime.hour === bookingData.timeSlot.startTime.hour &&
-            timeSlot.endTime.hour === bookingData.timeSlot.endTime.hour));
+        availableDates[date] = availableDates[date].filter(
+          (timeSlot) =>
+            !(
+              timeSlot.startTime.hour === bookingData.timeSlot.startTime.hour &&
+              timeSlot.endTime.hour === bookingData.timeSlot.endTime.hour
+            )
+        );
 
         if (availableDates[date].length === 0) {
           delete availableDates[date];
@@ -82,17 +97,15 @@ export const createBooking = async (bookingData: CreateBookingData, dates: strin
       });
     }
     batch.update(workingPlaceRef, {
-      availableDates: availableDates
+      availableDates: availableDates,
     });
 
     await batch.commit();
     console.log('Bookings created for certain dates');
-
   } catch (error) {
     console.error('Error creating booking: ', error);
   }
 };
-
 
 export const deleteWorkingPlace = async (id: string) => {
   const workingPlaceRef = doc(db, 'workingPlaces', id);
@@ -106,7 +119,6 @@ export const deleteWorkingPlace = async (id: string) => {
   const bookingsSnapshot = await getDocs(bookingsQuery);
 
   const batch = writeBatch(db);
-
 
   if (bookingsSnapshot.docs?.length) {
     bookingsSnapshot.docs.forEach((bookingDoc) => {
@@ -138,7 +150,8 @@ export const cancelBooking = async (bookingId: string) => {
 
   await updateDoc(bookingRef, { status: 'canceled' });
 
-  const availableDates: { [date: string]: TimeSlot[] } = workingPlace.availableDates || {};
+  const availableDates: { [date: string]: TimeSlot[] } =
+    workingPlace.availableDates || {};
 
   if (availableDates[booking.date]) {
     availableDates[booking.date].push(booking.timeSlot);
@@ -159,24 +172,32 @@ export const getUserInfo = async (userId: string) => {
   }
 
   const user = userSnapshot.data();
-  if (!user.userSkills) return {
-    email: user.email,
-    userSkills: ['admin']
-  };
+  if (!user.userSkills)
+    return {
+      email: user.email,
+      userSkills: ['admin'],
+    };
 
   return {
     email: user.email,
-    userSkills: user.userSkills
+    userSkills: user.userSkills,
   };
 };
 
-export const updateUserSkills = async (userId: string, newSkills: string[]) => {
+export const updateUserDetails = async (
+  userId: string,
+  newSkills: string[],
+  newLocation: string
+) => {
   const userRef = doc(db, 'users', userId);
 
-  await updateDoc(userRef, { userSkills: newSkills });
-}
+  await updateDoc(userRef, { userSkills: newSkills, location: newLocation });
+};
 
-export const addAvailableDateToWorkingPlaces = async (workingPlaceIds: string[], newAvailableDatesTime: NewAvailableDatesTime) => {
+export const addAvailableDateToWorkingPlaces = async (
+  workingPlaceIds: string[],
+  newAvailableDatesTime: NewAvailableDatesTime
+) => {
   const promises = workingPlaceIds.map(async (id) => {
     const workingPlaceRef = doc(db, 'workingPlaces', id);
     const workingPlaceSnapshot = await getDoc(workingPlaceRef);
@@ -187,7 +208,8 @@ export const addAvailableDateToWorkingPlaces = async (workingPlaceIds: string[],
     }
 
     const workingPlace = workingPlaceSnapshot.data();
-    const availableDates: { [date: string]: TimeSlot[] } = workingPlace.availableDates || {};
+    const availableDates: { [date: string]: TimeSlot[] } =
+      workingPlace.availableDates || {};
 
     for (const date of newAvailableDatesTime.dates) {
       // const existingDateIndex = availableDates.findIndex(ad => ad.date === date);
@@ -208,38 +230,68 @@ export const addAvailableDateToWorkingPlaces = async (workingPlaceIds: string[],
   await Promise.all(promises);
 };
 
-export const getWorkingPlaces = async (coworkingId: string): Promise<WorkingPlace[]> => {
+export const getWorkingPlaces = async (
+  coworkingId: string
+): Promise<WorkingPlace[]> => {
   const workingPlaces = collection(db, 'workingPlaces');
-  const q = query(workingPlaces, where('coworkingId', '==', coworkingId), orderBy('createdAt'));
+  const q = query(
+    workingPlaces,
+    where('coworkingId', '==', coworkingId),
+    orderBy('createdAt')
+  );
   const querySnapshot = await getDocs(q);
   if (querySnapshot.empty) {
     return [];
   }
-  return querySnapshot.docs.map((doc) => ({ ...(doc.data() as WorkingPlace), id: doc.id }));
-}
+  return querySnapshot.docs.map((doc) => ({
+    ...(doc.data() as WorkingPlace),
+    id: doc.id,
+  }));
+};
 
-export const getBookingsByWorkingPlace = async (workingPlaceId: string): Promise<Booking[]> => {
+export const getBookingsByWorkingPlace = async (
+  workingPlaceId: string
+): Promise<Booking[]> => {
   const bookings = collection(db, 'bookings');
-  const q = query(bookings, where('workingPlaceId', '==', workingPlaceId), orderBy('createdAt', 'desc'));
+  const q = query(
+    bookings,
+    where('workingPlaceId', '==', workingPlaceId),
+    orderBy('createdAt', 'desc')
+  );
   const querySnapshot = await getDocs(q);
   if (querySnapshot.empty) {
     return [];
   }
-  return querySnapshot.docs.map((doc) => ({ ...(doc.data() as Booking), id: doc.id }));
-}
+  return querySnapshot.docs.map((doc) => ({
+    ...(doc.data() as Booking),
+    id: doc.id,
+  }));
+};
 
-export const getBookingsByUserId = async (userId: string): Promise<Booking[]> => {
+export const getBookingsByUserId = async (
+  userId: string
+): Promise<Booking[]> => {
   const bookings = collection(db, 'bookings');
-  const q = query(bookings, where('userId', '==', userId), orderBy('createdAt', 'desc'));
+  const q = query(
+    bookings,
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc')
+  );
   const querySnapshot = await getDocs(q);
   if (querySnapshot.empty) {
     return [];
   }
-  return querySnapshot.docs.map((doc) => ({ ...(doc.data() as Booking), id: doc.id }));
-}
+  return querySnapshot.docs.map((doc) => ({
+    ...(doc.data() as Booking),
+    id: doc.id,
+  }));
+};
 
 export const getCoworkingId = async (userId: string) => {
-  const q = query(collection(db, 'coworkings'), where('authorID', '==', userId));
+  const q = query(
+    collection(db, 'coworkings'),
+    where('authorID', '==', userId)
+  );
   const querySnapshot = await getDocs(q);
   if (!querySnapshot.empty) {
     const coworkingDataId = querySnapshot.docs[0].id;
@@ -247,10 +299,9 @@ export const getCoworkingId = async (userId: string) => {
   } else {
     return null;
   }
-}
+};
 
 export const getCoworkingInfoById = async (coworkingId: string) => {
-
   const coworkingRef = doc(db, 'coworkings', coworkingId);
 
   const coworkingSnapshot = await getDoc(coworkingRef);
@@ -268,9 +319,11 @@ export const getCoworkingInfoById = async (coworkingId: string) => {
     description: coworking.description,
     imageUrls: coworking.imageUrls,
   };
-}
+};
 
-export const fetchCoworkings = (setData: React.Dispatch<React.SetStateAction<CoworkingItemType[]>>) => {
+export const fetchCoworkings = (
+  setData: React.Dispatch<React.SetStateAction<CoworkingItemType[]>>
+) => {
   const coworkingsRef = collection(db, 'coworkings');
   const q = query(coworkingsRef, orderBy('createdAt', 'desc'));
 
@@ -291,4 +344,4 @@ export const fetchCoworkings = (setData: React.Dispatch<React.SetStateAction<Cow
   );
 
   return unsubscribe;
-}
+};

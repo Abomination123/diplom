@@ -15,19 +15,24 @@ import {
   IonItem,
   IonCard,
   IonCardHeader,
+  IonCheckbox,
 } from '@ionic/react';
-import { addCircleOutline, removeCircleOutline } from 'ionicons/icons';
-import { RangeValue, newSettings } from '../types';
+import {
+  addCircleOutline,
+  removeCircleOutline,
+  locationOutline,
+} from 'ionicons/icons';
+import { newSettings } from '../types';
 import './AlgoSettings.css';
 
 interface AlgoSettingsProps {
   location: string;
   skills: string[];
-  priceRange: RangeValue;
-  // onAlgorithmRestart: (newSettings: newSettings) => void;
+  price: number | null;
+  getLocation: (modalIcon?: boolean) => Promise<string>;
   onDismiss: (
     data?:
-      | { location: string; priceRange: RangeValue; skills: string[] }
+      | { location: string; price: number | null; skills: string[] }
       | null
       | undefined,
     role?: string
@@ -37,19 +42,25 @@ interface AlgoSettingsProps {
 const AlgoSettings: React.FC<AlgoSettingsProps> = ({
   location,
   skills,
-  priceRange,
-  // onAlgorithmRestart,
+  price,
+  getLocation,
   onDismiss,
 }) => {
   const [userLocation, setUserLocation] = useState(location);
   const [userSkills, setUserSkills] = useState(skills);
-  const [userPriceRange, setUserPriceRange] = useState<RangeValue>(priceRange);
+  const [userPrice, setUserPrice] = useState<number | null>(price);
+  const [useCheckbox, setUseCheckbox] = useState<boolean>(false);
 
   useEffect(() => {
     setUserLocation(location);
     setUserSkills(skills);
-    setUserPriceRange(priceRange);
-  }, [location, skills, priceRange]);
+    setUserPrice(price);
+  }, [location, skills, price]);
+
+  const handleCheckboxChange = () => {
+    setUseCheckbox(!useCheckbox);
+    setUserPrice((prevPrice) => (!prevPrice ? 50 : null));
+  };
 
   const addSkill = () => {
     setUserSkills([...userSkills, '']);
@@ -83,7 +94,7 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
                 onDismiss(
                   {
                     location: userLocation,
-                    priceRange: userPriceRange,
+                    price: useCheckbox ? userPrice : null,
                     skills: userSkills,
                   },
                   'confirm'
@@ -108,27 +119,36 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
               // className='input-location'
               onIonChange={(e) => setUserLocation(e.detail.value || '')}
             />
+            <IonIcon
+              slot='end'
+              size='large'
+              icon={locationOutline}
+              onClick={async () => {
+                const currentLocation = await getLocation(true);
+                setUserLocation(currentLocation);
+              }}
+            />
           </IonItem>
         </IonCard>
         <IonCard>
           <IonCardHeader>
-            <IonLabel>Price Range</IonLabel>
+            <IonLabel>Target Price</IonLabel>
           </IonCardHeader>
           <IonItem lines='none'>
             <IonRange
-              aria-label='Dual Knobs Range'
-              dualKnobs={true}
-              value={{
-                lower: userPriceRange?.lower ?? 20,
-                upper: userPriceRange?.upper ?? 80,
-              }}
-              onIonInput={(e) =>
-                setUserPriceRange(e.detail.value as RangeValue)
-              }
+              disabled={!userPrice}
+              value={userPrice ? userPrice : undefined}
+              onIonInput={(e) => setUserPrice(e.detail.value as number)}
             >
-              <IonLabel slot='start'>{userPriceRange?.lower ?? 0}</IonLabel>
-              <IonLabel slot='end'>{userPriceRange?.upper ?? 100}</IonLabel>
+              <IonLabel slot='start'>{10}</IonLabel>
+              <IonLabel slot='end'>{60}</IonLabel>
             </IonRange>
+            <IonCheckbox
+              slot='end'
+              className='checkbox-price'
+              checked={useCheckbox}
+              onIonChange={handleCheckboxChange}
+            />
           </IonItem>
         </IonCard>
         {userSkills &&
