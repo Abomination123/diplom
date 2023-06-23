@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   IonCard,
   IonCardHeader,
@@ -15,6 +15,7 @@ import {
   IonIcon,
   IonPopover,
   IonContent,
+  useIonPopover,
 } from '@ionic/react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper';
@@ -28,6 +29,7 @@ import {
   arrowForwardCircleOutline,
   informationCircleOutline,
 } from 'ionicons/icons';
+import { log } from 'console';
 interface CoworkingItemProps {
   coworking: CoworkingItemType;
   // onButtonBookClick: (coworking: CoworkingItemType) => void;
@@ -37,6 +39,21 @@ const CoworkingItem: React.FC<CoworkingItemProps> = ({
   coworking: { id, name, location, description, imageUrls, skillAnalysisTopic },
   // onButtonBookClick
 }) => {
+  console.log(skillAnalysisTopic);
+
+  // if (skillAnalysisTopic) {
+  const PopoverSkills = () => (
+    <IonContent className='ion-padding popover-content'>
+      {skillAnalysisTopic}
+    </IonContent>
+  );
+
+  const [present, dismiss] = useIonPopover(PopoverSkills, {
+    onDismiss: (data: any, role: string) => dismiss(data, role),
+  });
+  // const [roleMsg, setRoleMsg] = useState('');
+  // }
+
   return (
     <IonCard className='coworking-card'>
       <IonCardHeader>
@@ -58,18 +75,43 @@ const CoworkingItem: React.FC<CoworkingItemProps> = ({
             <IonCardTitle className='coworking-title'>{name}</IonCardTitle>
             <IonCardSubtitle>{location}</IonCardSubtitle>
             {skillAnalysisTopic && (
+              // <IonButton
+              //   className='popup-button'
+              //   onClick={(e: any) =>
+              //     present({
+              //       event: e,
+              //       onDidDismiss: (e: CustomEvent) => console.log(e.detail),
+              //     })
+              //   }
+              // >
               <>
-                <IonBadge className='badge-networking' color='primary'>
-                  <small>Networking potential</small>
+                <IonBadge
+                  className='badge-networking'
+                  color='primary'
+                  onClick={(e: any) =>
+                    present({
+                      event: e,
+                      // onDidDismiss: (e: CustomEvent) => console.log(e.detail),
+                    })
+                  }
+                >
+                  <small style={{ fontSize: 11, paddingLeft: 2 }}>
+                    Networking
+                  </small>
+                  <IonIcon
+                    size='small'
+                    icon={informationCircleOutline}
+                    id='right-end'
+                  />
                   {/* <IonIcon icon={informationCircleOutline} size='small' />
                   <IonLabel>{`Match by ${skillAnalysisTopic.toUpperCase()}`}</IonLabel> */}
                 </IonBadge>
-                <IonIcon icon={informationCircleOutline} id='right-end' />
-                <IonPopover trigger='right-end' side='right' alignment='end'>
+                {/* <IonPopover trigger='right-end' side='right' alignment='end'>
                   <IonContent class='ion-padding'>
                     {skillAnalysisTopic}
                   </IonContent>
-                </IonPopover>
+                </IonPopover> */}
+                {/* </IonButton> */}
               </>
             )}
             <IonButton

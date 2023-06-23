@@ -19,6 +19,7 @@ import {
   trashOutline,
   closeCircleOutline,
   sadOutline,
+  ellipsisHorizontalCircleOutline,
   checkmarkDoneCircleOutline,
 } from 'ionicons/icons';
 import './WorkingPlaceCard.css';
@@ -280,11 +281,15 @@ const WorkingPlaceCard: React.FC<{
                     <IonIcon
                       size='small'
                       color='danger'
-                      icon={trashOutline}
+                      icon={ellipsisHorizontalCircleOutline}
                       onClick={() => handleCancelBooking(id)}
                     />
                   ) : status === 'canceled' ? (
-                    <IonIcon size='small' color='medium' icon={sadOutline} />
+                    <IonIcon
+                      size='small'
+                      color='medium'
+                      icon={closeCircleOutline}
+                    />
                   ) : status === 'completed' ? (
                     <IonIcon
                       size='small'

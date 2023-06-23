@@ -6,7 +6,8 @@
   height: 150px;
 }
 
-.coworking-image {}
+.coworking-image {
+}
 
 .image-swiper {
   width: 120px;
@@ -21,10 +22,27 @@
 
 .badge-networking {
   background-color: limegreen;
-  width: 120px;
+  width: 90px;
+  height: auto;
   margin-top: 5px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 1px;
 }
 
 .book-button {
   align-self: baseline;
+}
+
+/* .popup-button {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+} */
+
+.popover-content {
+  text-align: center;
+  text-transform: capitalize;
 }

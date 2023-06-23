@@ -49,7 +49,7 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
   const [userLocation, setUserLocation] = useState(location);
   const [userSkills, setUserSkills] = useState(skills);
   const [userPrice, setUserPrice] = useState<number | null>(price);
-  const [useCheckbox, setUseCheckbox] = useState<boolean>(false);
+  const [useCheckbox, setUseCheckbox] = useState<boolean>(!!price);
 
   useEffect(() => {
     setUserLocation(location);
@@ -117,7 +117,7 @@ const AlgoSettings: React.FC<AlgoSettingsProps> = ({
               value={userLocation}
               placeholder='Enter your location'
               // className='input-location'
-              onIonChange={(e) => setUserLocation(e.detail.value || '')}
+              onIonInput={(e) => setUserLocation(e.detail.value || '')}
             />
             <IonIcon
               slot='end'

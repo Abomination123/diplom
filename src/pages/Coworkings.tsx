@@ -34,6 +34,12 @@ import { DocumentData } from 'firebase/firestore';
 import { Geolocation, PermissionStatus } from '@capacitor/geolocation';
 import { geocode } from '../utils/utils';
 
+import {
+  createUsers,
+  createCoworkings,
+  createWorkingPlacesAndBookings,
+} from '../firebase/mockmock.js';
+
 interface CoworkingsPageProps extends RouteComponentProps {
   user: DocumentData;
 }
@@ -80,6 +86,18 @@ const Coworkings: React.FC<CoworkingsPageProps> = ({ user, history }) => {
       getLocation();
     }
   }, []);
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       await createWorkingPlacesAndBookings();
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
 
   const [present, dismiss] = useIonModal(AlgoSettings, {
     location: location,

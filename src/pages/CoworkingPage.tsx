@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import { DocumentData } from 'firebase/firestore';
 import {
@@ -43,7 +44,33 @@ import {
 
 export const mockedAvailableDatesAndTimeSlots = [
   {
-    date: '2023-06-01',
+    date: '2023-06-30',
+    timeSlots: [
+      {
+        startTime: { hour: '15', minute: '00' },
+        endTime: { hour: '17', minute: '15' },
+      },
+      {
+        startTime: { hour: '17', minute: '30' },
+        endTime: { hour: '18', minute: '45' },
+      },
+    ],
+  },
+  {
+    date: '2023-06-22',
+    timeSlots: [
+      {
+        startTime: { hour: '15', minute: '00' },
+        endTime: { hour: '17', minute: '15' },
+      },
+      {
+        startTime: { hour: '17', minute: '30' },
+        endTime: { hour: '18', minute: '45' },
+      },
+    ],
+  },
+  {
+    date: '2023-06-25',
     timeSlots: [
       {
         startTime: { hour: '15', minute: '00' },
@@ -56,6 +83,40 @@ export const mockedAvailableDatesAndTimeSlots = [
     ],
   },
 ];
+
+// function getFormattedDate(date) {
+//   var year = date.getFullYear();
+
+//   var month = (1 + date.getMonth()).toString();
+//   month = month.length > 1 ? month : '0' + month;
+
+//   var day = date.getDate().toString();
+//   day = day.length > 1 ? day : '0' + day;
+
+//   return year + '-' + month + '-' + day;
+// }
+
+// let mockedAvailableDates = {};
+
+// for (let i = 0; i < 7; i++) {
+//   let date = new Date();
+//   date.setDate(date.getDate() + i);
+
+//   mockedAvailableDates[getFormattedDate(date)] = [
+//     {
+//       startTime: { hour: '10', minute: '00' },
+//       endTime: { hour: '12', minute: '15' },
+//     },
+//     {
+//       startTime: { hour: '13', minute: '30' },
+//       endTime: { hour: '15', minute: '45' },
+//     },
+//     {
+//       startTime: { hour: '16', minute: '30' },
+//       endTime: { hour: '18', minute: '45' },
+//     },
+//   ];
+// }
 
 interface CoworkingPageProps extends RouteComponentProps<{ id: string }> {
   user: DocumentData;
@@ -145,25 +206,26 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({
         [selectedDate]
       );
     }
-    setWorkingPlaces((prevWPs) =>
-      prevWPs.map((wp) => {
-        if (wp.id !== bookingPlaceId) {
-          return wp;
-        } else {
-          return {
-            ...wp,
-            availableDates: {
-              ...wp.availableDates,
-              [selectedDate]: wp.availableDates[selectedDate].filter(
-                ({ startTime, endTime }) =>
-                  startTime.hour !== selectedTimeSlot!.startTime.hour &&
-                  endTime.hour !== selectedTimeSlot!.endTime.hour
-              ),
-            },
-          };
-        }
-      })
-    );
+    // setWorkingPlaces((prevWPs) =>
+    //   prevWPs.map((wp) => {
+    //     if (wp.id !== bookingPlaceId) {
+    //       return wp;
+    //     } else {
+    //       return {
+    //         ...wp,
+    //         availableDates: {
+    //           ...wp.availableDates,
+    //           [selectedDate]: wp.availableDates[selectedDate].filter(
+    //             ({ startTime, endTime }) =>
+    //               startTime.hour !== selectedTimeSlot!.startTime.hour &&
+    //               endTime.hour !== selectedTimeSlot!.endTime.hour
+    //           ),
+    //         },
+    //       };
+    //     }
+    //   })
+    // );
+    setWorkingPlaces([]);
     setSelectedTimeSlot(null);
   };
 
@@ -223,41 +285,46 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({
   );
   console.log(availableMonths);
 
-  const availableDays = Array.from(
-    new Set(
-      availableDatesAndTimeSlots
-        .filter(
-          (item) =>
-            new Date(item.date).getFullYear() ===
-              new Date(selectedDate).getFullYear() &&
-            new Date(item.date).getMonth() === new Date(selectedDate).getMonth()
+  const availableDays: any[] = false
+    ? Array.from(
+        new Set(
+          availableDatesAndTimeSlots
+            .filter(
+              (item) =>
+                new Date(item.date).getFullYear() ===
+                  new Date(selectedDate).getFullYear() &&
+                new Date(item.date).getMonth() ===
+                  new Date(selectedDate).getMonth()
+            )
+            .map((item) => new Date(item.date).getDate())
         )
-        .map((item) => new Date(item.date).getDate())
-    )
-  );
+      )
+    : [22, 25, 30];
   // .sort()
   // .join(',');
   console.log(availableDays);
 
-  const availableTimeSlots = selectedDate
-    ? availableDatesAndTimeSlots.find((slot) => slot.date === selectedDate)
-        ?.timeSlots || []
-    : [];
-  console.log(availableTimeSlots);
+  const availableTimeSlots: any[] = [];
+  // selectedDate
+  //   ? availableDatesAndTimeSlots.find((slot) => slot.date === selectedDate)
+  //       ?.timeSlots || []
+  //   : [];
+  // console.log(availableTimeSlots);
 
-  const availablePlaces = selectedTimeSlot
-    ? workingPlaces.length
-      ? workingPlaces.filter(
-          (place) =>
-            Object.keys(place.availableDates).includes(selectedDate) &&
-            place.availableDates[selectedDate].some(
-              ({ startTime, endTime }) =>
-                startTime.hour === selectedTimeSlot.startTime.hour &&
-                endTime.hour === selectedTimeSlot.endTime.hour
-            )
-        )
-      : mockWorkingPlaces
-    : [];
+  const availablePlaces = mockWorkingPlaces;
+  // selectedTimeSlot && false
+  //   ? workingPlaces.length
+  //     ? workingPlaces.filter(
+  //         (place) =>
+  //           Object.keys(place.availableDates).includes(selectedDate) &&
+  //           place.availableDates[selectedDate].some(
+  //             ({ startTime, endTime }) =>
+  //               startTime.hour === selectedTimeSlot!.startTime.hour &&
+  //               endTime.hour === selectedTimeSlot!.endTime.hour
+  //           )
+  //       )
+  //     : mockWorkingPlaces
+  //   : [];
 
   const compareWith = (o1: TimeSlot, o2: TimeSlot) => {
     return o1 && o2
@@ -368,12 +435,34 @@ const CoworkingPage: React.FC<CoworkingPageProps> = ({
                   width: 'fit-content',
                 }}
               >
-                {availableTimeSlots.map(({ startTime, endTime }, index) => (
-                  <IonSelectOption key={index} value={{ startTime, endTime }}>
-                    {startTime.hour}:{startTime.minute} - {endTime.hour}:
-                    {endTime.minute}
-                  </IonSelectOption>
-                ))}
+                {availableTimeSlots.length > 0
+                  ? availableTimeSlots.map(({ startTime, endTime }, index) => (
+                      <IonSelectOption
+                        key={index}
+                        value={{ startTime, endTime }}
+                      >
+                        {startTime.hour}:{startTime.minute} - {endTime.hour}:
+                        {endTime.minute}
+                      </IonSelectOption>
+                    ))
+                  : [
+                      {
+                        startTime: { hour: '15', minute: '00' },
+                        endTime: { hour: '17', minute: '15' },
+                      },
+                      {
+                        startTime: { hour: '17', minute: '30' },
+                        endTime: { hour: '18', minute: '45' },
+                      },
+                    ].map(({ startTime, endTime }, index) => (
+                      <IonSelectOption
+                        key={index}
+                        value={{ startTime, endTime }}
+                      >
+                        {startTime.hour}:{startTime.minute} - {endTime.hour}:
+                        {endTime.minute}
+                      </IonSelectOption>
+                    ))}
               </IonSelect>
             </IonItem>
           )}

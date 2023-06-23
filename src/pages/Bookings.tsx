@@ -19,6 +19,7 @@ import {
   closeCircleOutline,
   sadOutline,
   businessOutline,
+  ellipsisHorizontalCircleOutline,
 } from 'ionicons/icons';
 import { Booking, CustomizedState, DocumentDataInterface } from '../types';
 import { bookingsMock } from '../components/WorkingPlaceCard';
@@ -45,6 +46,16 @@ const Bookings: React.FC<BookingsPageProps> = ({
   useEffect(() => {
     const fetchBookings = async () => {
       const data = await getBookingsByUserId(user.id);
+      data.sort((a, b) => {
+        const dateA = new Date(
+          `${a.date}T${a.timeSlot.startTime.hour}:${a.timeSlot.startTime.minute}`
+        );
+        const dateB = new Date(
+          `${b.date}T${b.timeSlot.startTime.hour}:${b.timeSlot.startTime.minute}`
+        );
+
+        return dateB.getTime() - dateA.getTime();
+      });
       if (data.length) {
         setBookings(data);
       } else {
@@ -103,7 +114,8 @@ const Bookings: React.FC<BookingsPageProps> = ({
               <IonItem
                 key={id}
                 className='ion-item-booking ion-item-label'
-                lines='none'
+                style={{ display: 'flex' }}
+                lines='full'
               >
                 <IonIcon
                   slot='start'
@@ -114,17 +126,23 @@ const Bookings: React.FC<BookingsPageProps> = ({
                 />
                 <p
                   style={{
-                    marginLeft: '14px',
+                    // marginLeft: '14px',
                     marginRight: '7px',
-                    width: '50vw',
+                    // textDecoration: 'solid underline 2px',
+                    // width: '50vw',
+                    // wordWrap: 'break-word',
                   }}
-                >{`${date} ${startTime.hour}:${startTime.hour} - ${endTime.hour}:${endTime.minute}`}</p>
+                >
+                  {`${date}`}
+                  &emsp;
+                  {`${startTime.hour}:${startTime.hour} - ${endTime.hour}:${endTime.minute}`}
+                </p>
                 {status === 'active' ? (
                   <IonIcon
                     slot='end'
                     size='large'
                     color='danger'
-                    icon={closeCircleOutline}
+                    icon={ellipsisHorizontalCircleOutline}
                     onClick={() => setShowDeleteAlert([true, id])}
                   />
                 ) : status === 'canceled' ? (
@@ -132,7 +150,7 @@ const Bookings: React.FC<BookingsPageProps> = ({
                     slot='end'
                     size='large'
                     color='medium'
-                    icon={sadOutline}
+                    icon={closeCircleOutline}
                   />
                 ) : status === 'completed' ? (
                   <IonIcon
